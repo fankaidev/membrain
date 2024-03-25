@@ -1,5 +1,5 @@
 import { Col, Input, Row, Select } from "antd";
-import React from "react";
+import React, { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { BlankDiv } from "./assistant";
 import { useStorage } from "./hooks/useStorage";
@@ -7,7 +7,11 @@ import { LLM_MODELS, Language } from "./utils/config";
 
 const Options = () => {
   const [apiKeys, setApiKeys] = useStorage<{ [key: string]: string }>("sync", "apiKeys", {});
-  const [language, setLanguage] = useStorage<Language>("sync", "language", "en");
+  const [language, setLanguage] = useStorage<Language>(
+    "sync",
+    "language",
+    chrome.i18n.getUILanguage() == "zh-CN" ? "zh" : "en"
+  );
 
   const saveKey = (model: string, apiKey: string) => {
     const values = { ...apiKeys };
@@ -15,6 +19,10 @@ const Options = () => {
     setApiKeys(values);
     console.debug("saved api keys", model, apiKey, apiKeys, values);
   };
+
+  useEffect(() => {
+    console.log("lang=", language);
+  }, [language]);
 
   const changeLanguage = (value: string) => {
     setLanguage(value as Language);
@@ -27,7 +35,7 @@ const Options = () => {
       </Row>
       <Row justify={"center"} key="lang">
         <Select
-          defaultValue={language}
+          value={language}
           onChange={changeLanguage}
           style={{ width: 120 }}
           options={[

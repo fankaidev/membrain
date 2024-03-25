@@ -20,7 +20,7 @@
   "side_panel": {
     "default_path": "assistant.html"
   },
-
+  "default_locale": "en",
   "permissions": ["sidePanel", "contextMenus", "tabs", "activeTab", "scripting", "storage"],
   "host_permissions": ["<all_urls>"],
   "icons": {

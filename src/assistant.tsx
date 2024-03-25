@@ -17,20 +17,28 @@ import { useStorage } from "./hooks/useStorage";
 import { callClaude } from "./utils/claude";
 import {
   LLM_MODELS,
+  Language,
   WA_MESSAGE_TYPE_NEW_TASK,
   WA_TASK_EXPLAIN_SELECTION,
-  WA_TASK_SUMMARIZE_PAGE
+  WA_TASK_SUMMARIZE_PAGE,
 } from "./utils/config";
 import { callGemini } from "./utils/gemini";
 import { Message, Reference } from "./utils/message";
 import { callBaichuan, callKimi, callOpenAI, callYi } from "./utils/openai";
 import { getPageMarkDown, getPageSelectionText } from "./utils/page_content";
+import { getLocaleMessage } from "./utils/locale";
+import { get } from "lodash";
 
 export const BlankDiv = ({ height }: { height?: number }) => {
   return <div style={{ height: `${height || 8}px`, margin: "0px", padding: "0px" }}></div>;
 };
 
 const Assistant = () => {
+  const [lang] = useStorage<Language>(
+    "sync",
+    "language",
+    chrome.i18n.getUILanguage() == "zh-CN" ? "zh" : "en"
+  );
   const [apiKeys] = useStorage<{ [key: string]: string }>("sync", "apiKeys", {});
   const [model, setModel] = useStorage<string>("local", "model", "");
   const [history, setHistory] = useStorage<Message[]>("local", "chatHistory", []);
@@ -52,7 +60,7 @@ const Assistant = () => {
     const currentWindow = await chrome.windows.getCurrent();
     if (task.windowId === currentWindow.id) {
       await chrome.storage.local.set({ task: null });
-      // 需要通过effect来异步调用，因为这个时候model数据可能还没有ready
+      // wait for UseEffect to trigger, as `model` may not ready yet
       setTask(task.name);
     }
   };
@@ -65,7 +73,7 @@ const Assistant = () => {
         checkNewTask();
       }
     });
-    // 显式调用一次，因为对于刚打开的sidepanel，可能会错过message
+    // invoke explicitly, as newly opened panels may miss above message
     checkNewTask();
   }, []);
 
@@ -151,11 +159,11 @@ const Assistant = () => {
     setCurrentAnswer("");
     setRound((round) => round + 1);
 
-    let systemPrompt = `你是一个智能助手，请你尽量准确的回答用户的问题。\n`;
+    let systemPrompt = `${getLocaleMessage(lang, "prompt_system")}\n`;
     if (context_references.length > 0) {
-      systemPrompt += `你应当参考以下的资料来回答：\n`;
+      systemPrompt += `${getLocaleMessage(lang, "prompt_useRefences")}\n`;
       for (const [index, ref] of context_references.entries()) {
-        systemPrompt += `资料${index + 1}: type=${ref.type}`;
+        systemPrompt += `${index + 1}: type=${ref.type}`;
         if (ref.type === "webpage") {
           systemPrompt += `, url=${ref.url}, title=${ref.title}`;
         }
@@ -221,14 +229,14 @@ const Assistant = () => {
 
   const summarize = async () => {
     if (references.length > 0) {
-      chatWithLLM("总结参考资料里的内容");
+      chatWithLLM(getLocaleMessage(lang, "prompt_summarize"));
     }
   };
 
   const summarizePage = async () => {
     const pageRef = await addPageToReference();
     if (pageRef) {
-      chatWithLLM(`总结这个网页的内容: ${pageRef.title}`, [pageRef]);
+      chatWithLLM(`${getLocaleMessage(lang, "prompt_summarizePage")}: ${pageRef.title}`, [pageRef]);
     }
   };
 
@@ -236,7 +244,8 @@ const Assistant = () => {
     const pageRef = await addPageToReference();
     const selectionText = await getCurrentSelection();
     if (pageRef && selectionText) {
-      chatWithLLM(`请具体分析网页中的这段内容:\n\n${selectionText}\n`, [pageRef]);
+      const prompt = getLocaleMessage(lang, "prompt_summarizeSelection");
+      chatWithLLM(`${prompt}:\n\n${selectionText}\n`, [pageRef]);
     }
   };
 
@@ -354,23 +363,29 @@ const Assistant = () => {
           {references.length > 0 && displayReferences()}
           {references.length > 0 && <BlankDiv height={4} />}
           <Flex id="reference_actions" justify="space-between">
-            <Tag>{`${references.length} References`}</Tag>
+            <Tag>{`${references.length} ${getLocaleMessage(lang, "tag_references")}`}</Tag>
             <span>
               {iconButton(
                 <FileAddOutlined />,
-                "add current page",
+                getLocaleMessage(lang, "tooltip_addCurrentPage"),
                 "small",
                 false,
                 addPageToReference
               )}
               {iconButton(
                 <FileTextOutlined />,
-                "add selection",
+                getLocaleMessage(lang, "tooltip_addSelection"),
                 "small",
                 false,
                 addSelectionToReference
               )}
-              {iconButton(<DeleteOutlined />, "delete all", "small", true, clearReferences)}
+              {iconButton(
+                <DeleteOutlined />,
+                getLocaleMessage(lang, "tooltip_deleteAll"),
+                "small",
+                true,
+                clearReferences
+              )}
             </span>
           </Flex>
           <BlankDiv height={8} />
@@ -396,13 +411,13 @@ const Assistant = () => {
           ) : (
             <Flex id="actions" wrap="wrap" gap="small">
               <Button size="small" type="dashed" onClick={summarize}>
-                Summarize
+                {getLocaleMessage(lang, "button_summarize")}
               </Button>
               <Button size="small" type="dashed" onClick={summarizePage}>
-                Summarize Page
+                {getLocaleMessage(lang, "button_summarizePage")}
               </Button>
               <Button size="small" type="dashed" onClick={explainSelection}>
-                Explain Selection
+                {getLocaleMessage(lang, "button_summarizeSelection")}
               </Button>
             </Flex>
           )}
@@ -420,14 +435,26 @@ const Assistant = () => {
           <Flex dir="row" gap={4}>
             <Input.TextArea
               value={userInput}
-              placeholder="Ask Assistant"
+              placeholder={getLocaleMessage(lang, "input_placeholder")}
               onChange={handleUserInputChange}
               onKeyDown={handleUserInputKeyDown}
               autoSize
               allowClear
             />
-            {iconButton(<SendOutlined />, "send(cmd+enter)", "middle", false, simpleChat)}
-            {iconButton(<ClearOutlined />, "clear all", "middle", true, clearAll)}
+            {iconButton(
+              <SendOutlined />,
+              getLocaleMessage(lang, "tooltip_sendMessage"),
+              "middle",
+              false,
+              simpleChat
+            )}
+            {iconButton(
+              <ClearOutlined />,
+              getLocaleMessage(lang, "tooltip_clearAll"),
+              "middle",
+              true,
+              clearAll
+            )}
           </Flex>
         </div>
         <BlankDiv height={8} />

@@ -4,10 +4,12 @@ import {
   FileAddOutlined,
   FileTextOutlined,
   RobotOutlined,
+  SendOutlined,
   SyncOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { Button, Collapse, Divider, Flex, Input, Radio, Tag, Tooltip } from "antd";
+import { Button, Collapse, Flex, Input, Radio, Tag, Tooltip } from "antd";
+import { SizeType } from "antd/es/config-provider/SizeContext";
 import markdownit from "markdown-it";
 import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -17,7 +19,7 @@ import {
   LLM_MODELS,
   WA_MESSAGE_TYPE_NEW_TASK,
   WA_TASK_EXPLAIN_SELECTION,
-  WA_TASK_SUMMARIZE_PAGE,
+  WA_TASK_SUMMARIZE_PAGE
 } from "./utils/config";
 import { callGemini } from "./utils/gemini";
 import { Message, Reference } from "./utils/message";
@@ -29,7 +31,7 @@ export const BlankDiv = ({ height }: { height?: number }) => {
 };
 
 const Assistant = () => {
-  const [apiKeys, _] = useStorage<{ [key: string]: string }>("sync", "apiKeys", {});
+  const [apiKeys] = useStorage<{ [key: string]: string }>("sync", "apiKeys", {});
   const [model, setModel] = useStorage<string>("local", "model", "");
   const [history, setHistory] = useStorage<Message[]>("local", "chatHistory", []);
   const [references, setReferences] = useStorage<Reference[]>("local", "references", []);
@@ -56,7 +58,7 @@ const Assistant = () => {
   };
 
   useEffect(() => {
-    console.debug("init listener");
+    console.debug("init assistant");
     chrome.runtime.onMessage.addListener((message: { type: string }) => {
       if (message.type == WA_MESSAGE_TYPE_NEW_TASK) {
         console.log("on message");
@@ -218,7 +220,9 @@ const Assistant = () => {
   };
 
   const summarize = async () => {
-    chatWithLLM("总结参考资料里的内容");
+    if (references.length > 0) {
+      chatWithLLM("总结参考资料里的内容");
+    }
   };
 
   const summarizePage = async () => {
@@ -241,8 +245,9 @@ const Assistant = () => {
     chatWithLLM(userInput.trim());
   };
 
-  const clearHistory = () => {
+  const clearAll = () => {
     setHistory([]);
+    setReferences([]);
   };
 
   const handleUserInputChange = (e: ChangeEvent<any>) => {
@@ -320,6 +325,20 @@ const Assistant = () => {
     return ret;
   };
 
+  const iconButton = (
+    icon: any,
+    tooltip: string,
+    size: SizeType,
+    isDanger: boolean,
+    onClick: () => void
+  ) => {
+    return (
+      <Tooltip title={tooltip}>
+        <Button icon={icon} type="text" size={size} danger={isDanger} onClick={onClick} />
+      </Tooltip>
+    );
+  };
+
   return (
     <>
       <Flex
@@ -327,72 +346,70 @@ const Assistant = () => {
         justify="start"
         style={{
           height: "100%",
-          padding: "10px 0px 10px 0px",
           boxSizing: "border-box",
         }}
       >
-        <Flex id="actions" wrap="wrap" gap="small">
-          <Button danger size="small" onClick={clearHistory}>
-            Clear Chat
-          </Button>
-          <Button type="primary" size="small" onClick={summarize}>
-            Summarize
-          </Button>
-          <Button size="small" onClick={summarizePage}>
-            Summarize Page
-          </Button>
-          <Button size="small" onClick={explainSelection}>
-            Explain Selection
-          </Button>
-        </Flex>
-
         <div id="references">
-          <BlankDiv height={16} />
-          {displayReferences()}
-          <BlankDiv height={4} />
+          <BlankDiv height={8} />
+          {references.length > 0 && displayReferences()}
+          {references.length > 0 && <BlankDiv height={4} />}
           <Flex id="reference_actions" justify="space-between">
             <Tag>{`${references.length} References`}</Tag>
             <span>
-              <Tooltip title="add current page">
-                <Button
-                  icon={<FileAddOutlined />}
-                  type="text"
-                  size="small"
-                  onClick={addPageToReference}
-                />
-              </Tooltip>
-              <Tooltip title="add selection">
-                <Button
-                  icon={<FileTextOutlined />}
-                  type="text"
-                  size="small"
-                  onClick={addSelectionToReference}
-                />
-              </Tooltip>
-              <Tooltip title="clear all">
-                <Button
-                  icon={<ClearOutlined />}
-                  danger
-                  type="text"
-                  size="small"
-                  onClick={clearReferences}
-                />
-              </Tooltip>
+              {iconButton(
+                <FileAddOutlined />,
+                "add current page",
+                "small",
+                false,
+                addPageToReference
+              )}
+              {iconButton(
+                <FileTextOutlined />,
+                "add selection",
+                "small",
+                false,
+                addSelectionToReference
+              )}
+              {iconButton(<DeleteOutlined />, "delete all", "small", true, clearReferences)}
             </span>
           </Flex>
+          <BlankDiv height={8} />
         </div>
-        <Divider />
 
-        <div id="chats" ref={chatHistoryRef} style={{ flex: "1 1", overflow: "auto" }}>
+        <div
+          id="chats"
+          ref={chatHistoryRef}
+          style={{
+            flex: "1 1",
+            overflow: "auto",
+            borderStyle: "solid none solid none",
+            borderWidth: "1px",
+            borderColor: "WhiteSmoke",
+          }}
+        >
+          <BlankDiv height={8} />
           {displayHistory()}
-          {processing && (
+          {processing ? (
             <Tag icon={<SyncOutlined spin />} color="processing">
               processing
             </Tag>
+          ) : (
+            <Flex id="actions" wrap="wrap" gap="small">
+              <Button size="small" type="dashed" onClick={summarize}>
+                Summarize
+              </Button>
+              <Button size="small" type="dashed" onClick={summarizePage}>
+                Summarize Page
+              </Button>
+              <Button size="small" type="dashed" onClick={explainSelection}>
+                Explain Selection
+              </Button>
+            </Flex>
           )}
+          <BlankDiv height={8} />
         </div>
 
-        <div id="inputs" style={{ padding: "10px 5px 0px 5px" }}>
+        <div id="inputs" style={{ padding: "8px 4px 0px 4px" }}>
           <Radio.Group onChange={selectModel} value={model}>
             {LLM_MODELS.map((m: string) => (
               <Radio value={m} key={m} disabled={!apiKeys[m]}>
@@ -400,15 +417,20 @@ const Assistant = () => {
               </Radio>
             ))}
           </Radio.Group>
-          <Input.TextArea
-            value={userInput}
-            placeholder="Ask Assistant"
-            onChange={handleUserInputChange}
-            onKeyDown={handleUserInputKeyDown}
-            autoSize
-            allowClear
-          />
+          <Flex dir="row" gap={4}>
+            <Input.TextArea
+              value={userInput}
+              placeholder="Ask Assistant"
+              onChange={handleUserInputChange}
+              onKeyDown={handleUserInputKeyDown}
+              autoSize
+              allowClear
+            />
+            {iconButton(<SendOutlined />, "send(cmd+enter)", "middle", false, simpleChat)}
+            {iconButton(<ClearOutlined />, "clear all", "middle", true, clearAll)}
+          </Flex>
         </div>
+        <BlankDiv height={8} />
       </Flex>
     </>
   );

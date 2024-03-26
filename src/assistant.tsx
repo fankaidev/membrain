@@ -1,21 +1,14 @@
-import {
-  ClearOutlined,
-  RobotOutlined,
-  SendOutlined,
-  SettingOutlined,
-  SyncOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
-import { Button, Drawer, Flex, Input, Radio, Tag, Tooltip } from "antd";
-import { SizeType } from "antd/es/config-provider/SizeContext";
-import markdownit from "markdown-it";
-import React, { ChangeEvent, useEffect, useRef, useState } from "react";
+import { SettingOutlined } from "@ant-design/icons";
+import { Button, Drawer, Flex, Radio } from "antd";
+import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { ChatActions, ChatHistory, ChatInput } from "./components/chat";
 import { ReferenceBox, addPageToReference } from "./components/references";
 import { Settings } from "./components/settings";
 import { useStorage } from "./hooks/useStorage";
 import { callClaude } from "./utils/claude";
 import {
+  ChatAction,
   LLM_MODELS,
   Language,
   WA_MESSAGE_TYPE_NEW_TASK,
@@ -26,7 +19,7 @@ import { callGemini } from "./utils/gemini";
 import { getLocaleMessage } from "./utils/locale";
 import { Message, Reference } from "./utils/message";
 import { callBaichuan, callKimi, callOpenAI, callYi } from "./utils/openai";
-import { getCurrentPageRef, getCurrentSelection } from "./utils/page_content";
+import { getCurrentSelection } from "./utils/page_content";
 
 export const BlankDiv = ({ height }: { height?: number }) => {
   return <div style={{ height: `${height || 8}px`, margin: "0px", padding: "0px" }}></div>;
@@ -47,8 +40,8 @@ const Assistant = () => {
   const [userInput, setUserInput] = useState("");
   const [task, setTask] = useState<string>();
   const [round, setRound] = useState(0);
+  const [openDrawer, setOpenDrawer] = useState(false);
   const chatHistoryRef = useRef(null);
-  const md = markdownit();
 
   const checkNewTask = async () => {
     const { task } = await chrome.storage.local.get("task");
@@ -207,56 +200,15 @@ const Assistant = () => {
     setHistory([]);
   };
 
-  const handleUserInputChange = (e: ChangeEvent<any>) => {
-    setUserInput(e.target.value);
-  };
-
-  const handleUserInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (processing) {
-      return;
-    }
-    if (e.key === "Enter" && e.metaKey) {
-      e.preventDefault();
-      simpleChat();
-    }
-  };
-
   const selectModel = (e: any) => {
     setModel(e.target.value);
   };
 
-  const displayHistory = () => {
-    return history.map((item, index) => {
-      const html = md.render(item.content);
-      return (
-        <div key={"history" + index}>
-          <span>
-            {item.model ? <RobotOutlined /> : <UserOutlined />}
-            <em>
-              <b>{item.model ? ` ${item.role}(${item.model})` : ` ${item.role}`}</b>
-            </em>
-          </span>
-          <div dangerouslySetInnerHTML={{ __html: html }} />
-        </div>
-      );
-    });
-  };
-
-  const iconButton = (
-    icon: any,
-    tooltip: string,
-    size: SizeType,
-    isDanger: boolean,
-    onClick: () => void
-  ) => {
-    return (
-      <Tooltip title={tooltip}>
-        <Button icon={icon} type="text" size={size} danger={isDanger} onClick={onClick} />
-      </Tooltip>
-    );
-  };
-
-  const [openDrawer, setOpenDrawer] = useState(false);
+  const chatActions = [
+    new ChatAction("button_summarize", summarize),
+    new ChatAction("button_summarizePage", summarizePage),
+    new ChatAction("button_summarizeSelection", explainSelection),
+  ];
 
   return (
     <>
@@ -271,11 +223,15 @@ const Assistant = () => {
           boxSizing: "border-box",
         }}
       >
-        {iconButton(<SettingOutlined />, "", "middle", false, () => setOpenDrawer(true))}
-        <div id="references">
-          <BlankDiv height={8} />
+        <Button
+          icon={<SettingOutlined />}
+          type="text"
+          size="middle"
+          onClick={() => setOpenDrawer(true)}
+        />
+
+        <div id="references" style={{ padding: "8px 0px 8px 0px" }}>
           <ReferenceBox references={references} setReferences={setReferences} lang={lang} />
-          <BlankDiv height={8} />
         </div>
 
         <div
@@ -287,28 +243,11 @@ const Assistant = () => {
             borderStyle: "solid none solid none",
             borderWidth: "1px",
             borderColor: "WhiteSmoke",
+            padding: "8px 0px 8px 0px",
           }}
         >
-          <BlankDiv height={8} />
-          {displayHistory()}
-          {processing ? (
-            <Tag icon={<SyncOutlined spin />} color="processing">
-              processing
-            </Tag>
-          ) : (
-            <Flex id="actions" wrap="wrap" gap="small">
-              <Button size="small" type="dashed" onClick={summarize}>
-                {getLocaleMessage(lang, "button_summarize")}
-              </Button>
-              <Button size="small" type="dashed" onClick={summarizePage}>
-                {getLocaleMessage(lang, "button_summarizePage")}
-              </Button>
-              <Button size="small" type="dashed" onClick={explainSelection}>
-                {getLocaleMessage(lang, "button_summarizeSelection")}
-              </Button>
-            </Flex>
-          )}
-          <BlankDiv height={8} />
+          <ChatHistory history={history} />
+          <ChatActions lang={lang} processing={processing} actions={chatActions} />
         </div>
 
         <div id="inputs" style={{ padding: "8px 4px 0px 4px" }}>
@@ -319,30 +258,14 @@ const Assistant = () => {
               </Radio>
             ))}
           </Radio.Group>
-          <Flex dir="row" gap={4}>
-            <Input.TextArea
-              value={userInput}
-              placeholder={getLocaleMessage(lang, "input_placeholder")}
-              onChange={handleUserInputChange}
-              onKeyDown={handleUserInputKeyDown}
-              autoSize
-              allowClear
-            />
-            {iconButton(
-              <SendOutlined />,
-              getLocaleMessage(lang, "tooltip_sendMessage"),
-              "middle",
-              false,
-              simpleChat
-            )}
-            {iconButton(
-              <ClearOutlined />,
-              getLocaleMessage(lang, "tooltip_clearChats"),
-              "middle",
-              true,
-              clearChats
-            )}
-          </Flex>
+          <ChatInput
+            lang={lang}
+            userInput={userInput}
+            processing={processing}
+            setUserInput={setUserInput}
+            simpleChat={simpleChat}
+            clearChats={clearChats}
+          />
         </div>
         <BlankDiv height={8} />
       </Flex>

@@ -1,19 +1,18 @@
 import {
   ClearOutlined,
-  DeleteOutlined,
-  FileAddOutlined,
-  FileTextOutlined,
   RobotOutlined,
   SendOutlined,
   SettingOutlined,
   SyncOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { Button, Collapse, Drawer, Flex, Input, Radio, Tag, Tooltip } from "antd";
+import { Button, Drawer, Flex, Input, Radio, Tag, Tooltip } from "antd";
 import { SizeType } from "antd/es/config-provider/SizeContext";
 import markdownit from "markdown-it";
 import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { ReferenceBox, addPageToReference } from "./components/references";
+import { Settings } from "./components/settings";
 import { useStorage } from "./hooks/useStorage";
 import { callClaude } from "./utils/claude";
 import {
@@ -24,11 +23,10 @@ import {
   WA_TASK_SUMMARIZE_PAGE,
 } from "./utils/config";
 import { callGemini } from "./utils/gemini";
+import { getLocaleMessage } from "./utils/locale";
 import { Message, Reference } from "./utils/message";
 import { callBaichuan, callKimi, callOpenAI, callYi } from "./utils/openai";
-import { getPageMarkDown, getPageSelectionText } from "./utils/page_content";
-import { getLocaleMessage } from "./utils/locale";
-import { Settings } from "./components/settings";
+import { getCurrentPageRef, getCurrentSelection } from "./utils/page_content";
 
 export const BlankDiv = ({ height }: { height?: number }) => {
   return <div style={{ height: `${height || 8}px`, margin: "0px", padding: "0px" }}></div>;
@@ -105,30 +103,6 @@ const Assistant = () => {
     }
   }, [apiKeys]);
 
-  const getCurrentTab = async () => {
-    const [tab] = await chrome.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
-    if (!tab || !tab.url) {
-      return null;
-    }
-    if (tab.url!.includes("chrome://")) {
-      console.debug("skip page:", tab.url ? tab.url : "");
-      return null;
-    }
-    return tab;
-  };
-
-  const getCurrentSelection = async () => {
-    const tab = await getCurrentTab();
-    if (!tab) {
-      return;
-    }
-
-    return await getPageSelectionText(tab);
-  };
-
   const onResponseContent = (content: string) => {
     console.debug("on response content");
     setCurrentAnswer((answer) => answer + content);
@@ -202,45 +176,6 @@ const Assistant = () => {
     }
   };
 
-  const addPageToReference = async (): Promise<Reference | null> => {
-    const tab = await getCurrentTab();
-    if (!tab) {
-      return null;
-    }
-
-    const content = await getPageMarkDown(tab);
-    if (!content) {
-      return null;
-    }
-    const pageRef = new Reference("webpage", tab.title!, tab.url!, content);
-
-    if (references.filter((r) => r.type === "webpage" && r.url === pageRef.url).length == 0) {
-      setReferences([...references, pageRef]);
-    } else {
-      console.debug("skip adding existing reference");
-    }
-    return pageRef;
-  };
-
-  const addSelectionToReference = async (): Promise<Reference | null> => {
-    const selectionText = await getCurrentSelection();
-    if (selectionText) {
-      const selectionRef = new Reference("text", ellipse(selectionText, 20), "", selectionText);
-      setReferences([...references, selectionRef]);
-      return selectionRef;
-    } else {
-      return null;
-    }
-  };
-
-  const clearReferences = () => {
-    setReferences([]);
-  };
-
-  const removeReference = (id: string) => {
-    setReferences(references.filter((r) => r.id !== id));
-  };
-
   const summarize = async () => {
     if (references.length > 0) {
       chatWithLLM(getLocaleMessage(lang, "prompt_summarize"));
@@ -248,14 +183,14 @@ const Assistant = () => {
   };
 
   const summarizePage = async () => {
-    const pageRef = await addPageToReference();
+    const pageRef = await addPageToReference(references, setReferences);
     if (pageRef) {
       chatWithLLM(`${getLocaleMessage(lang, "prompt_summarizePage")}: ${pageRef.title}`, [pageRef]);
     }
   };
 
   const explainSelection = async () => {
-    const pageRef = await addPageToReference();
+    const pageRef = await addPageToReference(references, setReferences);
     const selectionText = await getCurrentSelection();
     if (pageRef && selectionText) {
       const prompt = getLocaleMessage(lang, "prompt_summarizeSelection");
@@ -306,46 +241,6 @@ const Assistant = () => {
       );
     });
   };
-  const displayReferences = () => {
-    const displayRemoveReferenceIcon = (ref: Reference) => {
-      return (
-        <DeleteOutlined
-          onClick={(event: React.MouseEvent) => {
-            event.stopPropagation();
-            removeReference(ref.id);
-          }}
-        />
-      );
-    };
-
-    const panels = references.map((ref, index) => {
-      const html = md.render(ref.content);
-      return (
-        <Collapse.Panel
-          header={ellipse(`${ref.type}: ${ref.title}`) + ` (${ref.content.length})`}
-          key={"ref" + index}
-          extra={displayRemoveReferenceIcon(ref)}
-        >
-          <div dangerouslySetInnerHTML={{ __html: html }} />
-        </Collapse.Panel>
-      );
-    });
-
-    return <Collapse style={{ width: "100%" }}>{panels}</Collapse>;
-  };
-  const ellipse = (text: string, limit: number = 70) => {
-    let ret = "";
-    let cost = 0;
-    for (let i = 0; i < text.length; i++) {
-      cost += text.charCodeAt(i) > 0x7f ? 2 : 1;
-      if (cost > limit) {
-        return ret + "...";
-      }
-      ret += text[i];
-    }
-
-    return ret;
-  };
 
   const iconButton = (
     icon: any,
@@ -379,34 +274,7 @@ const Assistant = () => {
         {iconButton(<SettingOutlined />, "", "middle", false, () => setOpenDrawer(true))}
         <div id="references">
           <BlankDiv height={8} />
-          {references.length > 0 && displayReferences()}
-          {references.length > 0 && <BlankDiv height={4} />}
-          <Flex id="reference_actions" justify="space-between">
-            <Tag>{`${references.length} ${getLocaleMessage(lang, "tag_references")}`}</Tag>
-            <span>
-              {iconButton(
-                <FileAddOutlined />,
-                getLocaleMessage(lang, "tooltip_addCurrentPage"),
-                "small",
-                false,
-                addPageToReference
-              )}
-              {iconButton(
-                <FileTextOutlined />,
-                getLocaleMessage(lang, "tooltip_addSelection"),
-                "small",
-                false,
-                addSelectionToReference
-              )}
-              {iconButton(
-                <DeleteOutlined />,
-                getLocaleMessage(lang, "tooltip_clearReferences"),
-                "small",
-                true,
-                clearReferences
-              )}
-            </span>
-          </Flex>
+          <ReferenceBox references={references} setReferences={setReferences} lang={lang} />
           <BlankDiv height={8} />
         </div>
 

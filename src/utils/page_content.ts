@@ -1,7 +1,23 @@
 import { Readability } from "@mozilla/readability";
 import TurndownService from "turndown";
+import { Reference } from "./message";
 
-export const getPageMarkDown = async (tab: chrome.tabs.Tab) => {
+const getCurrentTab = async () => {
+  const [tab] = await chrome.tabs.query({
+    active: true,
+    currentWindow: true,
+  });
+  if (!tab || !tab.url) {
+    return null;
+  }
+  if (tab.url!.includes("chrome://")) {
+    console.debug("skip page:", tab.url ? tab.url : "");
+    return null;
+  }
+  return tab;
+};
+
+const getPageMarkDown = async (tab: chrome.tabs.Tab) => {
   const [ret] = await chrome.scripting.executeScript({
     target: { tabId: tab.id! },
     func: () => {
@@ -20,7 +36,7 @@ export const getPageMarkDown = async (tab: chrome.tabs.Tab) => {
   return markdown;
 };
 
-export const getPageSelectionText = async (tab: chrome.tabs.Tab) => {
+const getPageSelectionText = async (tab: chrome.tabs.Tab) => {
   const [ret] = await chrome.scripting.executeScript({
     target: { tabId: tab.id! },
     func: () => {
@@ -29,4 +45,26 @@ export const getPageSelectionText = async (tab: chrome.tabs.Tab) => {
   });
 
   return ret.result;
+};
+
+export const getCurrentSelection = async () => {
+  const tab = await getCurrentTab();
+  if (!tab) {
+    return null;
+  }
+
+  return await getPageSelectionText(tab);
+};
+
+export const getCurrentPageRef = async () => {
+  const tab = await getCurrentTab();
+  if (!tab) {
+    return null;
+  }
+  const content = await getPageMarkDown(tab);
+  if (!content) {
+    return null;
+  }
+  const pageRef = new Reference("webpage", tab.title!, tab.url!, content);
+  return pageRef;
 };

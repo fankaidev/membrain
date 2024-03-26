@@ -254,9 +254,8 @@ const Assistant = () => {
     chatWithLLM(userInput.trim());
   };
 
-  const clearAll = () => {
+  const clearChats = () => {
     setHistory([]);
-    setReferences([]);
   };
 
   const handleUserInputChange = (e: ChangeEvent<any>) => {
@@ -381,7 +380,7 @@ const Assistant = () => {
               )}
               {iconButton(
                 <DeleteOutlined />,
-                getLocaleMessage(lang, "tooltip_deleteAll"),
+                getLocaleMessage(lang, "tooltip_clearReferences"),
                 "small",
                 true,
                 clearReferences
@@ -450,10 +449,10 @@ const Assistant = () => {
             )}
             {iconButton(
               <ClearOutlined />,
-              getLocaleMessage(lang, "tooltip_clearAll"),
+              getLocaleMessage(lang, "tooltip_clearChats"),
               "middle",
               true,
-              clearAll
+              clearChats
             )}
           </Flex>
         </div>

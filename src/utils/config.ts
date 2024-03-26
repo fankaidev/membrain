@@ -11,3 +11,13 @@ export const WA_MESSAGE_TYPE_OPEN = "web_assistant_open";
 export const WA_MENU_OPEN = "web_assistant_open";
 export const WA_MENU_SUMMARIZE_PAGE = "web_assistant_summarize_page";
 export const WA_MENU_EXPLAIN_SELECTION = "web_assistant_explain_selection";
+
+export class ChatAction {
+  name: string;
+  func: () => void;
+
+  constructor(name: string, func: () => void) {
+    this.name = name;
+    this.func = func;
+  }
+}

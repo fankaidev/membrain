@@ -1,28 +1,26 @@
 import { Col, Input, Row, Select } from "antd";
 import React, { useEffect } from "react";
-import { createRoot } from "react-dom/client";
-import { BlankDiv } from "./assistant";
-import { useStorage } from "./hooks/useStorage";
-import { LLM_MODELS, Language } from "./utils/config";
+import { useStorage } from "../hooks/useStorage";
+import { LLM_MODELS, Language } from "../utils/config";
+import { BlankDiv } from "../assistant";
 
-const Options = () => {
-  const [apiKeys, setApiKeys] = useStorage<{ [key: string]: string }>("sync", "apiKeys", {});
-  const [language, setLanguage] = useStorage<Language>(
-    "sync",
-    "language",
-    chrome.i18n.getUILanguage() == "zh-CN" ? "zh" : "en"
-  );
-
+export const Settings = ({
+  language,
+  setLanguage,
+  apiKeys,
+  setApiKeys,
+}: {
+  language: Language;
+  setLanguage: (value: Language) => void;
+  apiKeys: Record<string, string>;
+  setApiKeys: (values: Record<string, string>) => void;
+}) => {
   const saveKey = (model: string, apiKey: string) => {
     const values = { ...apiKeys };
     values[model] = apiKey;
     setApiKeys(values);
     console.debug("saved api keys", model, apiKey, apiKeys, values);
   };
-
-  useEffect(() => {
-    console.log("lang=", language);
-  }, [language]);
 
   const changeLanguage = (value: string) => {
     setLanguage(value as Language);
@@ -63,10 +61,3 @@ const Options = () => {
     </>
   );
 };
-
-const root = createRoot(document.getElementById("root")!);
-root.render(
-  <React.StrictMode>
-    <Options />
-  </React.StrictMode>
-);

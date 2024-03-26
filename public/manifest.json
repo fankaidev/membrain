@@ -4,9 +4,6 @@
   "version": "0.2",
   "description": "Web Assistant - second brain in your browser",
   "minimum_chrome_version": "95",
-  "options_ui": {
-    "page": "options.html"
-  },
   "action": {},
   "background": {
     "service_worker": "js/background.js"

@@ -2,24 +2,20 @@ import { SettingOutlined } from "@ant-design/icons";
 import { Button, Drawer, Flex, Radio } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { ChatActions, ChatHistory, ChatInput } from "./components/chat";
+import { ChatActions, ChatInput, ChatSession } from "./components/chat";
 import { ReferenceBox, addPageToReference } from "./components/references";
 import { Settings } from "./components/settings";
 import { useStorage } from "./hooks/useStorage";
-import { callClaude } from "./utils/claude";
 import {
-  ChatAction,
+  ChatTask,
   LLM_MODELS,
   Language,
-  WA_MESSAGE_TYPE_NEW_TASK,
-  WA_TASK_EXPLAIN_SELECTION,
-  WA_TASK_SUMMARIZE_PAGE,
+  WA_MENU_TASK_EXPLAIN_SELECTION,
+  WA_MENU_TASK_SUMMARIZE_PAGE,
+  WA_MESSAGE_TYPE_MENU_TASK,
 } from "./utils/config";
-import { callGemini } from "./utils/gemini";
 import { getLocaleMessage } from "./utils/locale";
 import { Message, Reference } from "./utils/message";
-import { callBaichuan, callKimi, callOpenAI, callYi } from "./utils/openai";
-import { getCurrentSelection } from "./utils/page_content";
 
 export const BlankDiv = ({ height }: { height?: number }) => {
   return <div style={{ height: `${height || 8}px`, margin: "0px", padding: "0px" }}></div>;
@@ -35,53 +31,45 @@ const Assistant = () => {
   const [model, setModel] = useStorage<string>("local", "model", "");
   const [history, setHistory] = useStorage<Message[]>("local", "chatHistory", []);
   const [references, setReferences] = useStorage<Reference[]>("local", "references", []);
-  const [processing, setProcessing] = useState(false);
-  const [currentAnswer, setCurrentAnswer] = useState("");
-  const [userInput, setUserInput] = useState("");
-  const [task, setTask] = useState<string>();
-  const [round, setRound] = useState(0);
-  const [openDrawer, setOpenDrawer] = useState(false);
+  const [chatTask, setChatTask] = useState<ChatTask | null>(null);
+  const [openSettings, setOpenSettings] = useState(false);
   const chatHistoryRef = useRef(null);
 
-  const checkNewTask = async () => {
-    const { task } = await chrome.storage.local.get("task");
-    if (!task) {
+  // handle tasks from menu
+  const checkNewTaskFromBackground = async () => {
+    const { menuTask } = await chrome.storage.local.get("menuTask");
+    if (!menuTask) {
       return;
     }
-    console.debug("get new task, task=", task);
     const currentWindow = await chrome.windows.getCurrent();
-    if (task.windowId === currentWindow.id) {
-      await chrome.storage.local.set({ task: null });
-      // wait for UseEffect to trigger, as `model` may not ready yet
-      setTask(task.name);
+    console.debug("get menu task=", menuTask, "current window=", currentWindow.id);
+    if (menuTask.windowId !== currentWindow.id) {
+      return;
+    }
+    chrome.storage.local.set({ menuTask: null });
+    const pageRef = await addPageToReference(references, setReferences);
+    if (!pageRef) {
+      console.error("fail to get current page");
+    } else if (menuTask.name === WA_MENU_TASK_SUMMARIZE_PAGE) {
+      setChatTask(new ChatTask(getLocaleMessage(lang, "prompt_summarizePage"), "page"));
+    } else if (menuTask.name === WA_MENU_TASK_EXPLAIN_SELECTION) {
+      setChatTask(new ChatTask(getLocaleMessage(lang, "prompt_summarizeSelection"), "selection"));
+    } else {
+      console.error("unknown menu task:", menuTask);
     }
   };
 
   useEffect(() => {
     console.debug("init assistant");
     chrome.runtime.onMessage.addListener((message: { type: string }) => {
-      if (message.type == WA_MESSAGE_TYPE_NEW_TASK) {
-        console.log("on message");
-        checkNewTask();
+      if (message.type == WA_MESSAGE_TYPE_MENU_TASK) {
+        console.log("receive menu task message", message);
+        checkNewTaskFromBackground();
       }
     });
     // invoke explicitly, as newly opened panels may miss above message
-    checkNewTask();
+    checkNewTaskFromBackground();
   }, []);
-
-  useEffect(() => {
-    if (!task) {
-      return;
-    }
-    if (task === WA_TASK_SUMMARIZE_PAGE) {
-      summarizePage();
-    } else if (task === WA_TASK_EXPLAIN_SELECTION) {
-      explainSelection();
-    } else {
-      console.error("unknown task:", task);
-    }
-    setTask("");
-  }, [task]);
 
   useEffect(() => {
     if (!!apiKeys[model]) {
@@ -96,35 +84,6 @@ const Assistant = () => {
     }
   }, [apiKeys]);
 
-  const onResponseContent = (content: string) => {
-    console.debug("on response content");
-    setCurrentAnswer((answer) => answer + content);
-  };
-
-  const onResponseFinish = (errorMsg: string = "") => {
-    console.log("on response finish, errorMsg=", errorMsg);
-    if (errorMsg) {
-      setCurrentAnswer((answer) => answer + ` [ERROR]:${errorMsg}`);
-    }
-    setProcessing(false);
-  };
-
-  useEffect(() => {
-    if (!currentAnswer) {
-      return;
-    }
-    console.debug(`update history on answer change of round ${round}`);
-    if (history.length > 0) {
-      const lastMsg = history[history.length - 1];
-      if (lastMsg.role === "assistant") {
-        setHistory([
-          ...history.slice(0, -1),
-          new Message(lastMsg.role, currentAnswer, lastMsg.model),
-        ]);
-      }
-    }
-  }, [currentAnswer, round]);
-
   useEffect(() => {
     if (chatHistoryRef.current) {
       const element = chatHistoryRef.current as HTMLElement;
@@ -132,71 +91,7 @@ const Assistant = () => {
     }
   }, [history]);
 
-  const chatWithLLM = async (content: string, context_references: Reference[] = references) => {
-    const query = new Message("user", content);
-    const reply = new Message("assistant", "", model);
-    setProcessing(true);
-    setHistory([...history, query, reply]);
-    setCurrentAnswer("");
-    setRound((round) => round + 1);
-
-    let systemPrompt = `${getLocaleMessage(lang, "prompt_system")}\n`;
-    if (context_references.length > 0) {
-      systemPrompt += `${getLocaleMessage(lang, "prompt_useRefences")}\n`;
-      for (const [index, ref] of context_references.entries()) {
-        systemPrompt += `${index + 1}: type=${ref.type}`;
-        if (ref.type === "webpage") {
-          systemPrompt += `, url=${ref.url}, title=${ref.title}`;
-        }
-        systemPrompt += `\n===\n${ref.content}\n===\n`;
-      }
-    }
-    const systemMsg = new Message("system", systemPrompt);
-    const messages = [systemMsg, ...history, query];
-    const apiKey = apiKeys[model];
-    if (model === "Kimi") {
-      callKimi(apiKey, messages, onResponseContent, onResponseFinish);
-    } else if (model === "Yi") {
-      callYi(apiKey, messages, onResponseContent, onResponseFinish);
-    } else if (model === "Gemini") {
-      callGemini(apiKey, messages, onResponseContent, onResponseFinish);
-    } else if (model === "Claude") {
-      callClaude(apiKey, messages, onResponseContent, onResponseFinish);
-    } else if (model === "Baichuan") {
-      callBaichuan(apiKey, messages, onResponseContent, onResponseFinish);
-    } else {
-      callOpenAI(apiKey, messages, onResponseContent, onResponseFinish);
-    }
-  };
-
-  const summarize = async () => {
-    if (references.length > 0) {
-      chatWithLLM(getLocaleMessage(lang, "prompt_summarize"));
-    }
-  };
-
-  const summarizePage = async () => {
-    const pageRef = await addPageToReference(references, setReferences);
-    if (pageRef) {
-      chatWithLLM(`${getLocaleMessage(lang, "prompt_summarizePage")}: ${pageRef.title}`, [pageRef]);
-    }
-  };
-
-  const explainSelection = async () => {
-    const pageRef = await addPageToReference(references, setReferences);
-    const selectionText = await getCurrentSelection();
-    if (pageRef && selectionText) {
-      const prompt = getLocaleMessage(lang, "prompt_summarizeSelection");
-      chatWithLLM(`${prompt}:\n\n${selectionText}\n`, [pageRef]);
-    }
-  };
-
-  const simpleChat = async () => {
-    setUserInput("");
-    chatWithLLM(userInput.trim());
-  };
-
-  const clearChats = () => {
+  const clearChatSession = () => {
     setHistory([]);
   };
 
@@ -204,15 +99,9 @@ const Assistant = () => {
     setModel(e.target.value);
   };
 
-  const chatActions = [
-    new ChatAction("button_summarize", summarize),
-    new ChatAction("button_summarizePage", summarizePage),
-    new ChatAction("button_summarizeSelection", explainSelection),
-  ];
-
   return (
     <>
-      <Drawer title="Settings" onClose={() => setOpenDrawer(false)} open={openDrawer}>
+      <Drawer title="Settings" onClose={() => setOpenSettings(false)} open={openSettings}>
         <Settings language={lang} setLanguage={setLang} apiKeys={apiKeys} setApiKeys={setApiKeys} />
       </Drawer>
       <Flex
@@ -227,7 +116,7 @@ const Assistant = () => {
           icon={<SettingOutlined />}
           type="text"
           size="middle"
-          onClick={() => setOpenDrawer(true)}
+          onClick={() => setOpenSettings(true)}
         />
 
         <div id="references" style={{ padding: "8px 0px 8px 0px" }}>
@@ -246,8 +135,18 @@ const Assistant = () => {
             padding: "8px 0px 8px 0px",
           }}
         >
-          <ChatHistory history={history} />
-          <ChatActions lang={lang} processing={processing} actions={chatActions} />
+          <ChatSession
+            lang={lang}
+            model={model}
+            apiKeys={apiKeys}
+            references={references}
+            chatTask={chatTask}
+            history={history}
+            setReferences={setReferences}
+            setChatTask={setChatTask}
+            setHistory={setHistory}
+          />
+          <ChatActions lang={lang} inChatTask={chatTask !== null} setChatTask={setChatTask} />
         </div>
 
         <div id="inputs" style={{ padding: "8px 4px 0px 4px" }}>
@@ -260,11 +159,9 @@ const Assistant = () => {
           </Radio.Group>
           <ChatInput
             lang={lang}
-            userInput={userInput}
-            processing={processing}
-            setUserInput={setUserInput}
-            simpleChat={simpleChat}
-            clearChats={clearChats}
+            inChatTask={chatTask !== null}
+            setChatTask={setChatTask}
+            clearChatSession={clearChatSession}
           />
         </div>
         <BlankDiv height={8} />

@@ -2,10 +2,10 @@ import {
   WA_MENU_EXPLAIN_SELECTION,
   WA_MENU_OPEN,
   WA_MENU_SUMMARIZE_PAGE,
-  WA_MESSAGE_TYPE_NEW_TASK,
+  WA_MESSAGE_TYPE_MENU_TASK,
   WA_MESSAGE_TYPE_OPEN,
-  WA_TASK_EXPLAIN_SELECTION,
-  WA_TASK_SUMMARIZE_PAGE,
+  WA_MENU_TASK_EXPLAIN_SELECTION,
+  WA_MENU_TASK_SUMMARIZE_PAGE,
 } from "./utils/config";
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -44,19 +44,19 @@ chrome.contextMenus.onClicked.addListener(
     } else if (info.menuItemId === WA_MENU_SUMMARIZE_PAGE) {
       await chrome.sidePanel.open({ windowId: tab.windowId, tabId: tab.id });
       await chrome.storage.local.set({
-        task: { windowId: tab.windowId, name: WA_TASK_SUMMARIZE_PAGE },
+        menuTask: { windowId: tab.windowId, name: WA_MENU_TASK_SUMMARIZE_PAGE },
       });
-      chrome.runtime.sendMessage({ type: WA_MESSAGE_TYPE_NEW_TASK });
+      chrome.runtime.sendMessage({ type: WA_MESSAGE_TYPE_MENU_TASK });
     } else if (info.menuItemId === WA_MENU_EXPLAIN_SELECTION) {
       await chrome.sidePanel.open({ windowId: tab.windowId, tabId: tab.id });
       await chrome.storage.local.set({
-        task: {
+        menuTask: {
           windowId: tab.windowId,
-          name: WA_TASK_EXPLAIN_SELECTION,
+          name: WA_MENU_TASK_EXPLAIN_SELECTION,
           text: info.selectionText,
         },
       });
-      chrome.runtime.sendMessage({ type: WA_MESSAGE_TYPE_NEW_TASK });
+      chrome.runtime.sendMessage({ type: WA_MESSAGE_TYPE_MENU_TASK });
     }
   }
 );

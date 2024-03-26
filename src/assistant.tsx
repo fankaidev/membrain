@@ -5,10 +5,11 @@ import {
   FileTextOutlined,
   RobotOutlined,
   SendOutlined,
+  SettingOutlined,
   SyncOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { Button, Collapse, Flex, Input, Radio, Tag, Tooltip } from "antd";
+import { Button, Collapse, Drawer, Flex, Input, Radio, Tag, Tooltip } from "antd";
 import { SizeType } from "antd/es/config-provider/SizeContext";
 import markdownit from "markdown-it";
 import React, { ChangeEvent, useEffect, useRef, useState } from "react";
@@ -27,19 +28,19 @@ import { Message, Reference } from "./utils/message";
 import { callBaichuan, callKimi, callOpenAI, callYi } from "./utils/openai";
 import { getPageMarkDown, getPageSelectionText } from "./utils/page_content";
 import { getLocaleMessage } from "./utils/locale";
-import { get } from "lodash";
+import { Settings } from "./components/settings";
 
 export const BlankDiv = ({ height }: { height?: number }) => {
   return <div style={{ height: `${height || 8}px`, margin: "0px", padding: "0px" }}></div>;
 };
 
 const Assistant = () => {
-  const [lang] = useStorage<Language>(
+  const [lang, setLang] = useStorage<Language>(
     "sync",
     "language",
     chrome.i18n.getUILanguage() == "zh-CN" ? "zh" : "en"
   );
-  const [apiKeys] = useStorage<{ [key: string]: string }>("sync", "apiKeys", {});
+  const [apiKeys, setApiKeys] = useStorage<{ [key: string]: string }>("sync", "apiKeys", {});
   const [model, setModel] = useStorage<string>("local", "model", "");
   const [history, setHistory] = useStorage<Message[]>("local", "chatHistory", []);
   const [references, setReferences] = useStorage<Reference[]>("local", "references", []);
@@ -90,6 +91,19 @@ const Assistant = () => {
     }
     setTask("");
   }, [task]);
+
+  useEffect(() => {
+    if (!!apiKeys[model]) {
+      return;
+    }
+    for (const key of LLM_MODELS) {
+      if (apiKeys[key]) {
+        console.debug("select first usable model", key);
+        setModel(key);
+        break;
+      }
+    }
+  }, [apiKeys]);
 
   const getCurrentTab = async () => {
     const [tab] = await chrome.tabs.query({
@@ -347,8 +361,13 @@ const Assistant = () => {
     );
   };
 
+  const [openDrawer, setOpenDrawer] = useState(false);
+
   return (
     <>
+      <Drawer title="Settings" onClose={() => setOpenDrawer(false)} open={openDrawer}>
+        <Settings language={lang} setLanguage={setLang} apiKeys={apiKeys} setApiKeys={setApiKeys} />
+      </Drawer>
       <Flex
         vertical
         justify="start"
@@ -357,6 +376,7 @@ const Assistant = () => {
           boxSizing: "border-box",
         }}
       >
+        {iconButton(<SettingOutlined />, "", "middle", false, () => setOpenDrawer(true))}
         <div id="references">
           <BlankDiv height={8} />
           {references.length > 0 && displayReferences()}

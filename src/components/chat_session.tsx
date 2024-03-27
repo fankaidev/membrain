@@ -161,12 +161,10 @@ export const ChatSession = ({
         const html = md.render(item.content);
         return (
           <div key={"history" + index}>
-            <span>
-              {item.model ? <RobotOutlined /> : <UserOutlined />}
-              <em>
-                <b>{item.model ? ` ${item.role}(${item.model})` : ` ${item.role}`}</b>
-              </em>
-            </span>
+            <div style={{ fontSize: "1.2em" }}>
+              {item.model ? "🤖" : "🙋"}
+              <b>{item.model ? ` ${item.role}(${item.model})` : ` ${item.role}`}</b>
+            </div>
             <div dangerouslySetInnerHTML={{ __html: html }} />
           </div>
         );

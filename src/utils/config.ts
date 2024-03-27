@@ -11,15 +11,3 @@ export const WA_MESSAGE_TYPE_OPEN = "web_assistant_open";
 export const WA_MENU_OPEN = "web_assistant_open";
 export const WA_MENU_SUMMARIZE_PAGE = "web_assistant_summarize_page";
 export const WA_MENU_EXPLAIN_SELECTION = "web_assistant_explain_selection";
-
-export type ChatReferenceType = "all" | "page" | "selection";
-
-export class ChatTask {
-  prompt: string;
-  reference_type: ChatReferenceType;
-
-  constructor(prompt: string, reference_type: ChatReferenceType) {
-    this.prompt = prompt;
-    this.reference_type = reference_type;
-  }
-}

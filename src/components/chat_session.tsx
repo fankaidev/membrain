@@ -1,64 +1,14 @@
-import {
-  ClearOutlined,
-  RobotOutlined,
-  SendOutlined,
-  SyncOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
-import { Button, Flex, Input, Tag, Tooltip } from "antd";
+import { RobotOutlined, UserOutlined } from "@ant-design/icons";
 import markdownit from "markdown-it";
-import React, { ChangeEvent, useEffect, useState } from "react";
-import { ChatTask, Language } from "../utils/config";
-import { getLocaleMessage } from "../utils/locale";
-import { Message, Reference } from "../utils/message";
-import { callBaichuan, callKimi, callOpenAI, callYi } from "../utils/openai";
-import { callGemini } from "../utils/gemini";
+import React, { useEffect, useState } from "react";
 import { callClaude } from "../utils/claude";
-import { addPageToReference } from "./references";
+import { Language } from "../utils/config";
+import { callGemini } from "../utils/gemini";
+import { getLocaleMessage } from "../utils/locale";
+import { ChatTask, Message, Reference } from "../utils/message";
+import { callBaichuan, callKimi, callOpenAI, callYi } from "../utils/openai";
 import { getCurrentSelection } from "../utils/page_content";
-
-export const ChatActions = ({
-  lang,
-  inChatTask,
-  setChatTask,
-}: {
-  lang: Language;
-  inChatTask: boolean;
-  setChatTask: (task: ChatTask | null) => void;
-}) => {
-  const chatTasks: [string, ChatTask][] = [
-    [
-      getLocaleMessage(lang, "button_summarize"),
-      new ChatTask(getLocaleMessage(lang, "prompt_summarize"), "all"),
-    ],
-    [
-      getLocaleMessage(lang, "button_summarizePage"),
-      new ChatTask(getLocaleMessage(lang, "prompt_summarizePage"), "page"),
-    ],
-    [
-      getLocaleMessage(lang, "button_summarizeSelection"),
-      new ChatTask(getLocaleMessage(lang, "prompt_summarizeSelection"), "selection"),
-    ],
-  ];
-
-  return (
-    <>
-      {inChatTask ? (
-        <Tag icon={<SyncOutlined spin />} color="processing" style={{ margin: "8px" }}>
-          processing
-        </Tag>
-      ) : (
-        <Flex id="actions" wrap="wrap" gap="small">
-          {chatTasks.map(([title, task], index) => (
-            <Button size="small" type="dashed" onClick={() => setChatTask(task)} key={index}>
-              {title}
-            </Button>
-          ))}
-        </Flex>
-      )}
-    </>
-  );
-};
+import { addPageToReference } from "./references";
 
 export const ChatSession = ({
   lang,
@@ -163,27 +113,36 @@ export const ChatSession = ({
       console.error("invalid chat task=", chatTask, "processing=", processing);
       return;
     }
+    console.log("chat task=", chatTask);
     if (chatTask.reference_type === "page") {
+      console.debug("add page reference");
       addPageToReference(references, setReferences).then((pageRef) => {
         if (pageRef) {
           const prompt = `${getLocaleMessage(lang, "prompt_pageReference")}\n\n\`\`\`${
             pageRef.title
           }\`\`\`\n\n${chatTask.prompt}`;
           chatWithLLM(prompt, [pageRef]);
+        } else {
+          setChatTask(null);
         }
       });
     } else if (chatTask.reference_type === "selection") {
+      console.debug("add selection reference");
       getCurrentSelection().then((selection) => {
         if (selection) {
+          console.log("selection is", selection);
           const prompt = `${getLocaleMessage(
             lang,
             "prompt_selectionReference"
           )}\n\n\`\`\`${selection}\`\`\`\n\n${chatTask.prompt}`;
           chatWithLLM(prompt, references);
+        } else {
+          setChatTask(null);
         }
       });
-      chatWithLLM(chatTask.prompt, references);
     } else {
+      console.log("chat task=", chatTask.reference_type);
+
       chatWithLLM(chatTask.prompt, references);
     }
   }, [chatTask]);
@@ -204,67 +163,6 @@ export const ChatSession = ({
           </div>
         );
       })}
-    </>
-  );
-};
-
-export const ChatInput = ({
-  lang,
-  inChatTask,
-  setChatTask,
-  clearChatSession,
-}: {
-  lang: Language;
-  inChatTask: boolean;
-  setChatTask: (task: ChatTask | null) => void;
-  clearChatSession: () => void;
-}) => {
-  const [userInput, setUserInput] = useState("");
-
-  const handleUserInputChange = (e: ChangeEvent<any>) => {
-    setUserInput(e.target.value);
-  };
-
-  const chat = () => {
-    if (inChatTask || !userInput.trim()) {
-      return;
-    }
-    setChatTask(new ChatTask(userInput.trim(), "all"));
-    setUserInput("");
-  };
-
-  const handleUserInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && e.metaKey) {
-      e.preventDefault();
-      chat();
-    }
-  };
-
-  return (
-    <>
-      <Flex dir="row" gap={4}>
-        <Input.TextArea
-          value={userInput}
-          placeholder={getLocaleMessage(lang, "input_placeholder")}
-          onChange={handleUserInputChange}
-          onKeyDown={handleUserInputKeyDown}
-          autoSize
-          allowClear
-        />
-
-        <Tooltip title={getLocaleMessage(lang, "tooltip_sendMessage")}>
-          <Button icon={<SendOutlined />} type="text" size="middle" onClick={chat} />
-        </Tooltip>
-        <Tooltip title={getLocaleMessage(lang, "tooltip_clearChats")}>
-          <Button
-            icon={<ClearOutlined />}
-            type="text"
-            size="middle"
-            danger
-            onClick={clearChatSession}
-          />
-        </Tooltip>
-      </Flex>
     </>
   );
 };

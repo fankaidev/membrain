@@ -1,8 +1,7 @@
 import { Col, Input, Row, Select } from "antd";
-import React, { useEffect } from "react";
-import { useStorage } from "../hooks/useStorage";
-import { LLM_MODELS, Language } from "../utils/config";
+import React from "react";
 import { BlankDiv } from "../assistant";
+import { LLM_MODELS, Language } from "../utils/config";
 
 export const Settings = ({
   language,

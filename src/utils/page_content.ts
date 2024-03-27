@@ -36,7 +36,7 @@ const getPageMarkDown = async (tab: chrome.tabs.Tab) => {
   return markdown;
 };
 
-const getPageSelectionText = async (tab: chrome.tabs.Tab) => {
+const getPageSelectionText = async (tab: chrome.tabs.Tab): Promise<string> => {
   const [ret] = await chrome.scripting.executeScript({
     target: { tabId: tab.id! },
     func: () => {
@@ -44,19 +44,19 @@ const getPageSelectionText = async (tab: chrome.tabs.Tab) => {
     },
   });
 
-  return ret.result;
+  return ret.result || "";
 };
 
-export const getCurrentSelection = async () => {
+export const getCurrentSelection = async (): Promise<string> => {
   const tab = await getCurrentTab();
   if (!tab) {
-    return null;
+    return "";
   }
 
   return await getPageSelectionText(tab);
 };
 
-export const getCurrentPageRef = async () => {
+export const getCurrentPageRef = async (): Promise<Reference | null> => {
   const tab = await getCurrentTab();
   if (!tab) {
     return null;

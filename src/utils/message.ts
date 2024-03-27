@@ -1,3 +1,5 @@
+import { uniqueId } from "lodash";
+
 export class Message {
   role: string;
   content: string;
@@ -29,5 +31,31 @@ export class Reference {
     } else {
       this.id = `${type}:${title}`;
     }
+  }
+}
+
+export type ChatReferenceType = "all" | "page" | "selection";
+
+export class ChatTask {
+  prompt: string;
+  reference_type: ChatReferenceType;
+
+  constructor(prompt: string, reference_type: ChatReferenceType) {
+    this.prompt = prompt;
+    this.reference_type = reference_type;
+  }
+}
+
+export class PromptTemplate {
+  id: string;
+  name: string;
+  prompt: string;
+  reference_type: ChatReferenceType;
+
+  constructor(name: string, prompt: string, reference_type: ChatReferenceType) {
+    this.id = uniqueId();
+    this.name = name;
+    this.prompt = prompt;
+    this.reference_type = reference_type;
   }
 }

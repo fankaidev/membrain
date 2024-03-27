@@ -1,13 +1,15 @@
-import { SettingOutlined } from "@ant-design/icons";
-import { Button, Drawer, Flex, Radio } from "antd";
+import { FormOutlined, PoweroffOutlined, SettingOutlined } from "@ant-design/icons";
+import { Button, Drawer, Flex, Radio, Row } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { ChatActions, ChatInput, ChatSession } from "./components/chat";
+import { ChatActions } from "./components/chat_actions";
+import { ChatInput } from "./components/chat_input";
+import { ChatSession } from "./components/chat_session";
+import { PromptSettings } from "./components/prompt_settings";
 import { ReferenceBox, addPageToReference } from "./components/references";
 import { Settings } from "./components/settings";
 import { useStorage } from "./hooks/useStorage";
 import {
-  ChatTask,
   LLM_MODELS,
   Language,
   WA_MENU_TASK_EXPLAIN_SELECTION,
@@ -15,7 +17,7 @@ import {
   WA_MESSAGE_TYPE_MENU_TASK,
 } from "./utils/config";
 import { getLocaleMessage } from "./utils/locale";
-import { Message, Reference } from "./utils/message";
+import { ChatTask, Message, PromptTemplate, Reference } from "./utils/message";
 
 export const BlankDiv = ({ height }: { height?: number }) => {
   return <div style={{ height: `${height || 8}px`, margin: "0px", padding: "0px" }}></div>;
@@ -33,6 +35,12 @@ const Assistant = () => {
   const [references, setReferences] = useStorage<Reference[]>("local", "references", []);
   const [chatTask, setChatTask] = useState<ChatTask | null>(null);
   const [openSettings, setOpenSettings] = useState(false);
+  const [openPromptSettings, setOpenPromptSettings] = useState(false);
+  const [promptTemplates, setPromptTemplates] = useStorage<PromptTemplate[]>(
+    "sync",
+    "promptTemplates",
+    []
+  );
   const chatHistoryRef = useRef(null);
 
   // handle tasks from menu
@@ -95,14 +103,32 @@ const Assistant = () => {
     setHistory([]);
   };
 
+  const clearAll = () => {
+    clearChatSession();
+    setReferences([]);
+  };
+
   const selectModel = (e: any) => {
     setModel(e.target.value);
   };
 
   return (
     <>
-      <Drawer title="Settings" onClose={() => setOpenSettings(false)} open={openSettings}>
+      <Drawer
+        title="Settings"
+        onClose={() => setOpenSettings(false)}
+        open={openSettings}
+        keyboard={false}
+      >
         <Settings language={lang} setLanguage={setLang} apiKeys={apiKeys} setApiKeys={setApiKeys} />
+      </Drawer>
+      <Drawer
+        title="Prompt Settings"
+        onClose={() => setOpenPromptSettings(false)}
+        open={openPromptSettings}
+        keyboard={false}
+      >
+        <PromptSettings promptTemplates={promptTemplates} setPromptTemplates={setPromptTemplates} />
       </Drawer>
       <Flex
         vertical
@@ -112,12 +138,21 @@ const Assistant = () => {
           boxSizing: "border-box",
         }}
       >
-        <Button
-          icon={<SettingOutlined />}
-          type="text"
-          size="middle"
-          onClick={() => setOpenSettings(true)}
-        />
+        <Row>
+          <Button icon={<PoweroffOutlined />} type="text" size="middle" danger onClick={clearAll} />
+          <Button
+            icon={<SettingOutlined />}
+            type="text"
+            size="middle"
+            onClick={() => setOpenSettings(true)}
+          />
+          <Button
+            icon={<FormOutlined />}
+            type="text"
+            size="middle"
+            onClick={() => setOpenPromptSettings(true)}
+          />
+        </Row>
 
         <div id="references" style={{ padding: "8px 0px 8px 0px" }}>
           <ReferenceBox references={references} setReferences={setReferences} lang={lang} />
@@ -146,7 +181,12 @@ const Assistant = () => {
             setChatTask={setChatTask}
             setHistory={setHistory}
           />
-          <ChatActions lang={lang} inChatTask={chatTask !== null} setChatTask={setChatTask} />
+          <ChatActions
+            lang={lang}
+            promptTemplates={promptTemplates}
+            inChatTask={chatTask !== null}
+            setChatTask={setChatTask}
+          />
         </div>
 
         <div id="inputs" style={{ padding: "8px 4px 0px 4px" }}>

@@ -10,7 +10,6 @@ async function callModel(
   onContent: (_: string) => void
 ) {
   try {
-    console.debug("key", apiKey);
     const openai = new OpenAI({
       apiKey,
       baseURL,

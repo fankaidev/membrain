@@ -1,7 +1,7 @@
 import { Col, Input, Row, Select } from "antd";
 import React from "react";
 import { BlankDiv } from "../assistant";
-import { LLM_MODELS, Language } from "../utils/config";
+import { LLM_MODELS, Language, MODEL_PROVIDERS } from "../utils/config";
 
 export const Settings = ({
   language,
@@ -44,14 +44,14 @@ export const Settings = ({
       <Row justify={"center"} key="keys-header">
         <h3>API Keys</h3>
       </Row>
-      {LLM_MODELS.map((model: string) => (
-        <React.Fragment key={model}>
+      {MODEL_PROVIDERS.map((provider) => (
+        <React.Fragment key={provider.name}>
           <Row>
             <Col span={4} offset={1} style={{ lineHeight: "2" }}>
-              {model}
+              {provider.name}
             </Col>
             <Col span={18}>
-              <Input value={apiKeys[model]} onChange={(e) => saveKey(model, e.target.value)} />
+              <Input value={apiKeys[provider.name]} onChange={(e) => saveKey(provider.name, e.target.value)} />
             </Col>
           </Row>
           <BlankDiv height={4} />

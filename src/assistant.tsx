@@ -18,6 +18,7 @@ import {
 } from "./utils/config";
 import { getLocaleMessage } from "./utils/locale";
 import { ChatTask, Message, PromptTemplate, Reference } from "./utils/message";
+import { ModelSettings } from "./components/model_settings";
 
 export const BlankDiv = ({ height }: { height?: number }) => {
   return <div style={{ height: `${height || 8}px`, margin: "0px", padding: "0px" }}></div>;
@@ -36,6 +37,7 @@ const Assistant = () => {
   const [chatTask, setChatTask] = useState<ChatTask | null>(null);
   const [openSettings, setOpenSettings] = useState(false);
   const [openPromptSettings, setOpenPromptSettings] = useState(false);
+  const [openModelSettings, setOpenModelSettings] = useState(false);
   const [promptTemplates, setPromptTemplates] = useStorage<PromptTemplate[]>(
     "sync",
     "promptTemplates",
@@ -115,7 +117,7 @@ const Assistant = () => {
   return (
     <>
       <Drawer
-        title="Settings"
+        title="General Settings"
         onClose={() => setOpenSettings(false)}
         open={openSettings}
         keyboard={false}
@@ -129,6 +131,14 @@ const Assistant = () => {
         keyboard={false}
       >
         <PromptSettings promptTemplates={promptTemplates} setPromptTemplates={setPromptTemplates} />
+      </Drawer>
+      <Drawer
+        title="Model Settings"
+        onClose={() => setOpenModelSettings(false)}
+        open={openModelSettings}
+        keyboard={false}
+      >
+        <ModelSettings promptTemplates={promptTemplates} setPromptTemplates={setPromptTemplates} />
       </Drawer>
       <Flex
         vertical

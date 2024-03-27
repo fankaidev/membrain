@@ -2,10 +2,10 @@ import { DeleteOutlined, FileAddOutlined, FileTextOutlined } from "@ant-design/i
 import { Button, Collapse, Flex, Tag, Tooltip } from "antd";
 import markdownit from "markdown-it";
 import React from "react";
-import { BlankDiv } from "../assistant";
 import { getLocaleMessage } from "../utils/locale";
 import { Reference } from "../utils/message";
 import { getCurrentPageRef, getCurrentSelection } from "../utils/page_content";
+import { BlankDiv } from "./common";
 
 export const addPageToReference = async (
   references: Reference[],

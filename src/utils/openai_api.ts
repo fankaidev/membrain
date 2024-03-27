@@ -1,5 +1,6 @@
 import { sum } from "lodash";
 import { OpenAI } from "openai";
+import { Model, ModelProvider } from "./config";
 import { Message } from "./message";
 
 async function callModel(
@@ -50,6 +51,18 @@ function prepareChatData(
   };
   return data;
 }
+
+export const callOpenAIApi = async (
+  provider: ModelProvider,
+  apiKey: string,
+  model: Model,
+  query_messages: Message[],
+  onContent: (_: string) => void,
+  onFinish: (_?: string) => void
+) => {
+  const data = prepareChatData(query_messages, model.name, 0.3, model.maxTokens / 2);
+  callModel(apiKey, provider.endpoint, data, onFinish, onContent);
+};
 
 export const callKimi = async (
   apiKey: string,

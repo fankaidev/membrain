@@ -1,19 +1,19 @@
 import { RobotOutlined, UserOutlined } from "@ant-design/icons";
 import markdownit from "markdown-it";
 import React, { useEffect, useState } from "react";
-import { callClaude } from "../utils/claude";
-import { Language } from "../utils/config";
-import { callGemini } from "../utils/gemini";
+import { callClaude } from "../utils/anthropic_api";
+import { Language, MODELS, MODEL_PROVIDERS, ProviderConfig } from "../utils/config";
+import { callGemini } from "../utils/google_api";
 import { getLocaleMessage } from "../utils/locale";
 import { ChatTask, Message, Reference } from "../utils/message";
-import { callBaichuan, callKimi, callOpenAI, callYi } from "../utils/openai";
+import { callOpenAIApi } from "../utils/openai_api";
 import { getCurrentSelection } from "../utils/page_content";
 import { addPageToReference } from "./references";
 
 export const ChatSession = ({
   lang,
-  model,
-  apiKeys,
+  modelName,
+  providerConfigs,
   references,
   chatTask,
   history,
@@ -22,8 +22,8 @@ export const ChatSession = ({
   setHistory,
 }: {
   lang: Language;
-  model: string;
-  apiKeys: { [key: string]: string };
+  modelName: string;
+  providerConfigs: Record<string, ProviderConfig>;
   references: Reference[];
   chatTask: ChatTask | null;
   history: Message[];
@@ -69,7 +69,7 @@ export const ChatSession = ({
 
   const chatWithLLM = async (content: string, context_references: Reference[]) => {
     const query = new Message("user", content);
-    const reply = new Message("assistant", "", model);
+    const reply = new Message("assistant", "", modelName);
     setProcessing(true);
     setHistory([...history, query, reply]);
     setCurrentAnswer("");
@@ -88,19 +88,27 @@ export const ChatSession = ({
     }
     const systemMsg = new Message("system", systemPrompt);
     const messages = [systemMsg, ...history, query];
-    const apiKey = apiKeys[model];
-    if (model === "Kimi") {
-      callKimi(apiKey, messages, onResponseContent, onResponseFinish);
-    } else if (model === "Yi") {
-      callYi(apiKey, messages, onResponseContent, onResponseFinish);
-    } else if (model === "Gemini") {
-      callGemini(apiKey, messages, onResponseContent, onResponseFinish);
-    } else if (model === "Claude") {
-      callClaude(apiKey, messages, onResponseContent, onResponseFinish);
-    } else if (model === "Baichuan") {
-      callBaichuan(apiKey, messages, onResponseContent, onResponseFinish);
+    const model = MODELS.find((m) => m.name === modelName);
+    if (!model) {
+      console.error("invalid model=", modelName);
+      return;
+    }
+    const provider = MODEL_PROVIDERS.find((p) => p.name === model.provider);
+    if (!provider) {
+      console.error("invalid provider=", model.provider);
+      return;
+    }
+    const apiKey = providerConfigs[model.provider]?.apiKey;
+    if (!apiKey) {
+      console.error("missing api key for provider=", model.provider);
+      return;
+    }
+    if (provider.apiType === "Google") {
+      callGemini(apiKey, model, messages, onResponseContent, onResponseFinish);
+    } else if (provider.apiType === "Anthropic") {
+      callClaude(apiKey, model, messages, onResponseContent, onResponseFinish);
     } else {
-      callOpenAI(apiKey, messages, onResponseContent, onResponseFinish);
+      callOpenAIApi(provider, apiKey, model, messages, onResponseContent, onResponseFinish);
     }
   };
 

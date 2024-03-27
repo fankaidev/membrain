@@ -10,6 +10,7 @@
         "outDir": "dist/js",
         "noEmitOnError": true,
         "jsx": "react",
+        "lib": ["es6", "dom", "es2019"],
         "typeRoots": [ "node_modules/@types" ]
     }
 }

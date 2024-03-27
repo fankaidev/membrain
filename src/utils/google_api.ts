@@ -1,5 +1,6 @@
 import { Content, GoogleGenerativeAI } from "@google/generative-ai";
 import { Message } from "./message";
+import { Model, ModelProvider } from "./config";
 
 function prepareHistory(messages: Message[]) {
   const history: Content[] = [];
@@ -16,19 +17,20 @@ function prepareHistory(messages: Message[]) {
 
 export const callGemini = async (
   apiKey: string,
+  model: Model,
   messages: Message[],
   onContent: (_: string) => void,
   onFinish: (_?: string) => void
 ) => {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const genModel = genAI.getGenerativeModel({ model: model.name });
     if (messages.length > 1) {
       const first = new Message("user", messages[0].content + "\n\n" + messages[1].content);
       messages = [first, ...messages.slice(2)];
     }
     const history = prepareHistory(messages);
-    const chat = model.startChat({
+    const chat = genModel.startChat({
       history,
       generationConfig: {
         maxOutputTokens: 2048,

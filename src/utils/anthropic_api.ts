@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { MessageParam } from "@anthropic-ai/sdk/resources/index.mjs";
 import { Message } from "./message";
+import { Model } from "./config";
 
 function prepareChatData(
   query_messages: Message[],
@@ -28,6 +29,7 @@ function prepareChatData(
 
 export const callClaude = async (
   apiKey: string,
+  model: Model,
   messages: Message[],
   onContent: (_: string) => void,
   onFinish: (_?: string) => void
@@ -37,7 +39,7 @@ export const callClaude = async (
     const first = new Message("user", messages[0].content + "\n\n" + messages[1].content);
     messages = [first, ...messages.slice(2)];
   }
-  const data = prepareChatData(messages, "claude-3-sonnet-20240229", 0.3, 2048);
+  const data = prepareChatData(messages, model.name, 0.3, model.maxTokens);
   await anthropic.messages
     .stream(data)
     .on("text", (text) => {

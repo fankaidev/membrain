@@ -1,17 +1,25 @@
-import { FormOutlined, PoweroffOutlined, SettingOutlined } from "@ant-design/icons";
-import { Button, Drawer, Flex, Radio, Row } from "antd";
+import {
+  ApiOutlined,
+  DeploymentUnitOutlined,
+  FormOutlined,
+  PoweroffOutlined,
+  SettingOutlined,
+} from "@ant-design/icons";
+import { Button, Drawer, Flex, Row, Select, Tooltip } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ChatActions } from "./components/chat_actions";
 import { ChatInput } from "./components/chat_input";
 import { ChatSession } from "./components/chat_session";
+import { BlankDiv } from "./components/common";
+import { ModelSettings } from "./components/model_settings";
 import { PromptSettings } from "./components/prompt_settings";
 import { ReferenceBox, addPageToReference } from "./components/references";
 import { Settings } from "./components/settings";
 import { useStorage } from "./hooks/useStorage";
 import {
-  LLM_MODELS,
   Language,
+  ProviderConfig,
   WA_MENU_TASK_EXPLAIN_SELECTION,
   WA_MENU_TASK_SUMMARIZE_PAGE,
   WA_MESSAGE_TYPE_MENU_TASK,
@@ -19,28 +27,30 @@ import {
 import { getLocaleMessage } from "./utils/locale";
 import { ChatTask, Message, PromptTemplate, Reference } from "./utils/message";
 
-export const BlankDiv = ({ height }: { height?: number }) => {
-  return <div style={{ height: `${height || 8}px`, margin: "0px", padding: "0px" }}></div>;
-};
-
 const Assistant = () => {
   const [lang, setLang] = useStorage<Language>(
     "sync",
     "language",
     chrome.i18n.getUILanguage() == "zh-CN" ? "zh" : "en"
   );
-  const [apiKeys, setApiKeys] = useStorage<{ [key: string]: string }>("sync", "apiKeys", {});
-  const [model, setModel] = useStorage<string>("local", "model", "");
+  const [modelName, setModelName] = useStorage<string>("local", "modelName", "");
   const [history, setHistory] = useStorage<Message[]>("local", "chatHistory", []);
   const [references, setReferences] = useStorage<Reference[]>("local", "references", []);
   const [chatTask, setChatTask] = useState<ChatTask | null>(null);
   const [openSettings, setOpenSettings] = useState(false);
   const [openPromptSettings, setOpenPromptSettings] = useState(false);
+  const [openModelSettings, setOpenModelSettings] = useState(false);
   const [promptTemplates, setPromptTemplates] = useStorage<PromptTemplate[]>(
     "sync",
     "promptTemplates",
     []
   );
+  const [providerConfigs, setProviderConfigs] = useStorage<Record<string, ProviderConfig>>(
+    "sync",
+    "providerConfigs",
+    {}
+  );
+
   const chatHistoryRef = useRef(null);
 
   // handle tasks from menu
@@ -80,19 +90,6 @@ const Assistant = () => {
   }, []);
 
   useEffect(() => {
-    if (!!apiKeys[model]) {
-      return;
-    }
-    for (const key of LLM_MODELS) {
-      if (apiKeys[key]) {
-        console.debug("select first usable model", key);
-        setModel(key);
-        break;
-      }
-    }
-  }, [apiKeys]);
-
-  useEffect(() => {
     if (chatHistoryRef.current) {
       const element = chatHistoryRef.current as HTMLElement;
       element.scrollTop = element.scrollHeight;
@@ -108,19 +105,33 @@ const Assistant = () => {
     setReferences([]);
   };
 
-  const selectModel = (e: any) => {
-    setModel(e.target.value);
+  const selectModel = (modelName: string) => {
+    setModelName(modelName);
   };
+
+  const enabledModels = Object.values(providerConfigs)
+    .filter((c) => c.enabled)
+    .flatMap((c) => c.enabledModels);
+
+  useEffect(() => {
+    if (!enabledModels.includes(modelName)) {
+      if (enabledModels.length > 0) {
+        setModelName(enabledModels[0]);
+      } else {
+        setModelName("");
+      }
+    }
+  }, [providerConfigs]);
 
   return (
     <>
       <Drawer
-        title="Settings"
+        title="General Settings"
         onClose={() => setOpenSettings(false)}
         open={openSettings}
         keyboard={false}
       >
-        <Settings language={lang} setLanguage={setLang} apiKeys={apiKeys} setApiKeys={setApiKeys} />
+        <Settings language={lang} setLanguage={setLang} />
       </Drawer>
       <Drawer
         title="Prompt Settings"
@@ -129,6 +140,18 @@ const Assistant = () => {
         keyboard={false}
       >
         <PromptSettings promptTemplates={promptTemplates} setPromptTemplates={setPromptTemplates} />
+      </Drawer>
+      <Drawer
+        title="Model Settings"
+        onClose={() => setOpenModelSettings(false)}
+        open={openModelSettings}
+        keyboard={false}
+      >
+        <ModelSettings
+          language={lang}
+          providerConfigs={providerConfigs}
+          setProviderConfigs={setProviderConfigs}
+        />
       </Drawer>
       <Flex
         vertical
@@ -139,19 +162,39 @@ const Assistant = () => {
         }}
       >
         <Row>
-          <Button icon={<PoweroffOutlined />} type="text" size="middle" danger onClick={clearAll} />
-          <Button
-            icon={<SettingOutlined />}
-            type="text"
-            size="middle"
-            onClick={() => setOpenSettings(true)}
-          />
-          <Button
-            icon={<FormOutlined />}
-            type="text"
-            size="middle"
-            onClick={() => setOpenPromptSettings(true)}
-          />
+          <Tooltip title="clear all">
+            <Button
+              icon={<PoweroffOutlined />}
+              type="text"
+              size="middle"
+              danger
+              onClick={clearAll}
+            />
+          </Tooltip>
+          <Tooltip title="general settings">
+            <Button
+              icon={<SettingOutlined />}
+              type="text"
+              size="middle"
+              onClick={() => setOpenSettings(true)}
+            />{" "}
+          </Tooltip>
+          <Tooltip title="prompt settings">
+            <Button
+              icon={<FormOutlined />}
+              type="text"
+              size="middle"
+              onClick={() => setOpenPromptSettings(true)}
+            />{" "}
+          </Tooltip>
+          <Tooltip title="model settings">
+            <Button
+              icon={<DeploymentUnitOutlined />}
+              type="text"
+              size="middle"
+              onClick={() => setOpenModelSettings(true)}
+            />{" "}
+          </Tooltip>
         </Row>
 
         <div id="references" style={{ padding: "8px 0px 8px 0px" }}>
@@ -172,8 +215,8 @@ const Assistant = () => {
         >
           <ChatSession
             lang={lang}
-            model={model}
-            apiKeys={apiKeys}
+            modelName={modelName}
+            providerConfigs={providerConfigs}
             references={references}
             chatTask={chatTask}
             history={history}
@@ -190,21 +233,23 @@ const Assistant = () => {
         </div>
 
         <div id="inputs" style={{ padding: "8px 4px 0px 4px" }}>
-          <Radio.Group onChange={selectModel} value={model}>
-            {LLM_MODELS.map((m: string) => (
-              <Radio value={m} key={m} disabled={!apiKeys[m]}>
-                {m}
-              </Radio>
-            ))}
-          </Radio.Group>
+          <Select
+            onChange={selectModel}
+            value={modelName}
+            style={{ width: "100%" }}
+            placeholder="Select Model"
+            options={enabledModels.map((m: string) => ({ value: m }))}
+            showSearch
+          />
+          <BlankDiv height={4} />
           <ChatInput
             lang={lang}
             inChatTask={chatTask !== null}
             setChatTask={setChatTask}
             clearChatSession={clearChatSession}
           />
+          <BlankDiv height={8} />
         </div>
-        <BlankDiv height={8} />
       </Flex>
     </>
   );

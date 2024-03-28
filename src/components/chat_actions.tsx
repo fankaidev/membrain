@@ -1,4 +1,4 @@
-import { SyncOutlined } from "@ant-design/icons";
+import { InfoCircleOutlined, SyncOutlined } from "@ant-design/icons";
 import { Button, Flex, Tag } from "antd";
 import React from "react";
 import { Language } from "../utils/config";
@@ -7,14 +7,14 @@ import { ChatTask, PromptTemplate } from "../utils/message";
 
 export const ChatActions = ({
   lang,
-  inChatTask,
   setChatTask,
   promptTemplates,
+  chatStatus,
 }: {
   lang: Language;
-  inChatTask: boolean;
   setChatTask: (task: ChatTask | null) => void;
   promptTemplates: PromptTemplate[];
+  chatStatus: string;
 }) => {
   const chatTasks: [string, ChatTask][] = [
     [
@@ -39,19 +39,23 @@ export const ChatActions = ({
 
   return (
     <>
-      {inChatTask ? (
+      {chatStatus === "processing" && (
         <Tag icon={<SyncOutlined spin />} color="processing" style={{ margin: "8px" }}>
-          processing
+          {chatStatus}
         </Tag>
-      ) : (
-        <Flex id="actions" wrap="wrap" gap="small">
-          {chatTasks.map(([title, task], index) => (
-            <Button size="small" type="dashed" onClick={() => setChatTask(task)} key={index}>
-              {title}
-            </Button>
-          ))}
-        </Flex>
       )}
+      {chatStatus && chatStatus !== "processing" && (
+        <Tag icon={<InfoCircleOutlined />} color="error" style={{ margin: "8px" }}>
+          {chatStatus}
+        </Tag>
+      )}
+      <Flex id="actions" wrap="wrap" gap="small">
+        {chatTasks.map(([title, task], index) => (
+          <Button size="small" type="dashed" onClick={() => setChatTask(task)} key={index}>
+            {title}
+          </Button>
+        ))}
+      </Flex>
     </>
   );
 };

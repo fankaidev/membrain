@@ -1,83 +1,290 @@
-import { Col, Divider, Input, Row, Switch } from "antd";
-import React from "react";
-import { Language, MODELS, MODEL_PROVIDERS, ModelProvider, ProviderConfig } from "../utils/config";
+import { Button, Col, Divider, Form, Input, Modal, Radio, Row, Select, Switch } from "antd";
+import React, { useState } from "react";
+import {
+  Language,
+  SYSTEM_MODELS,
+  SYSTEM_PROVIDERS,
+  ModelProvider,
+  ProviderConfig,
+  Model,
+} from "../utils/config";
 import { BlankDiv } from "./common";
+import { EditOutlined, PlusCircleOutlined } from "@ant-design/icons";
+import OpenAI from "openai";
 
 export const ModelSettings = ({
   language,
   providerConfigs,
   setProviderConfigs,
+  customModels,
+  setCustomModels,
+  customProviders,
+  setCustomProviders,
 }: {
   language: Language;
   providerConfigs: Record<string, ProviderConfig>;
   setProviderConfigs: (values: Record<string, ProviderConfig>) => void;
+  customModels: Model[];
+  setCustomModels: (models: Model[]) => void;
+  customProviders: ModelProvider[];
+  setCustomProviders: (providers: ModelProvider[]) => void;
 }) => {
+  const [openProviderModal, setOpenProviderModal] = useState(false);
+  const [editingProvider, setEditingProvider] = useState<ModelProvider | null>(null);
+  const [providerForm] = Form.useForm();
+  const [openModelModal, setOpenModelModal] = useState(false);
+  const [editingModel, setEditingModel] = useState<Model | null>(null);
+  const [modelForm] = Form.useForm();
+  const allModels = SYSTEM_MODELS.concat(customModels);
+  const allProviders = SYSTEM_PROVIDERS.concat(customProviders);
+
   const updateProviderConfig = (config: ProviderConfig) => {
     const values = { ...providerConfigs };
-    values[config.name] = config;
+    values[config.providerId] = config;
     setProviderConfigs(values);
   };
 
-  const displayProviderSettings = (provider: ModelProvider) => {
-    const config =
-      providerConfigs[provider.name] || new ProviderConfig(provider.name, false, "", []);
-    const models = MODELS.filter((model) => model.provider === provider.name);
+  const upsertProvider = () => {
+    providerForm.validateFields().then((values) => {
+      console.debug("provider=", editingProvider, "model=", editingModel, "value=", values);
+      if (editingProvider) {
+        const provider = new ModelProvider(
+          values.name,
+          values.apiType,
+          values.endpoint,
+          editingProvider.id
+        );
+        setCustomProviders(
+          customProviders.map((p) => (p.id === editingProvider.id ? provider : p))
+        );
+      } else {
+        const provider = new ModelProvider(values.name, "OpenAI", values.endpoint);
+        setCustomProviders([...customProviders, provider]);
+      }
+      setOpenProviderModal(false);
+      setEditingModel(null);
+      setEditingProvider(null);
+    });
+  };
+
+  const upsertModel = () => {
+    modelForm.validateFields().then((values) => {
+      console.debug("provider=", editingProvider, "model=", editingModel, "value=", values);
+      if (editingModel) {
+        const model = new Model(
+          editingModel.providerId,
+          values.name,
+          values.maxTokens,
+          editingModel.id
+        );
+        setCustomModels(customModels.map((m) => (m.id === editingModel.id ? model : m)));
+      } else {
+        const model = new Model(editingProvider!.id, values.name, values.maxTokens);
+        setCustomModels([...customModels, model]);
+      }
+      setOpenModelModal(false);
+      setEditingModel(null);
+      setEditingProvider(null);
+    });
+  };
+
+  const deleteProvider = () => {
+    console.debug("delete provider=", editingProvider);
+    setOpenProviderModal(false);
+    setEditingModel(null);
+    setEditingProvider(null);
+    setCustomProviders(customProviders.filter((p) => p.id !== editingProvider?.id));
+  };
+
+  const deleteModel = () => {
+    console.debug("delete provider=", editingProvider, "model=", editingModel);
+    setOpenModelModal(false);
+    setEditingModel(null);
+    setEditingProvider(null);
+    setCustomModels(customModels.filter((m) => m.id !== editingModel?.id));
+  };
+  const startAddingModel = (provider: ModelProvider) => {
+    setEditingProvider(provider);
+    modelForm.resetFields();
+    setOpenModelModal(true);
+  };
+
+  const startEditingModel = (provider: ModelProvider, model: Model) => {
+    setEditingProvider(provider);
+    setEditingModel(model);
+    modelForm.setFieldsValue(model);
+    setOpenModelModal(true);
+  };
+
+  const startAddingProvider = () => {
+    providerForm.resetFields();
+    setOpenProviderModal(true);
+  };
+
+  const startEditingProvider = (provider: ModelProvider) => {
+    setEditingProvider(provider);
+    providerForm.setFieldsValue(provider);
+    setOpenProviderModal(true);
+  };
+
+  const displayProviderRow = (provider: ModelProvider, config: ProviderConfig) => {
     return (
-      <div key={provider.name}>
-        <Row style={{ width: "100%" }} align={"middle"}>
-          <Col span={21} style={{ lineHeight: "2" }}>
-            <b>{provider.name}</b>
-          </Col>
-          <Col span={3}>
-            <Switch
-              checked={config.enabled}
-              onChange={(checked) => {
-                config.enabled = checked;
-                updateProviderConfig(config);
-              }}
-            />
-          </Col>
-        </Row>
+      <Row key={provider.id} style={{ width: "100%" }} align={"middle"}>
+        <Col span={16} style={{ lineHeight: "2" }}>
+          <b>{provider.name}</b>
+        </Col>
+        <Col span={2} offset={1}>
+          {customProviders.includes(provider) && (
+            <EditOutlined onClick={() => startEditingProvider(provider)} />
+          )}
+        </Col>
+
+        <Col span={2}>
+          <PlusCircleOutlined onClick={() => startAddingModel(provider)} />
+        </Col>
+        <Col span={3}>
+          <Switch
+            checked={config.enabled}
+            onChange={(checked) => {
+              config.enabled = checked;
+              updateProviderConfig(config);
+            }}
+          />
+        </Col>
+      </Row>
+    );
+  };
+
+  const displayModelRow = (provider: ModelProvider, config: ProviderConfig, model: Model) => {
+    return (
+      <Row key={model.id} style={{ width: "100%" }}>
+        <Col span={20} style={{ lineHeight: "2" }}>
+          {model.name}
+        </Col>
+        <Col span={2}>
+          {customModels.includes(model) && (
+            <EditOutlined onClick={() => startEditingModel(provider, model)} />
+          )}
+        </Col>
+        <Col span={2}>
+          <Switch
+            size="small"
+            checked={config.enabledModels.includes(model.name)}
+            onChange={(checked) => {
+              if (checked) {
+                config.enabledModels.push(model.name);
+              } else {
+                config.enabledModels = config.enabledModels.filter((m) => m !== model.name);
+              }
+              updateProviderConfig(config);
+            }}
+          />
+        </Col>
+      </Row>
+    );
+  };
+
+  const displayModelModal = () => {
+    return (
+      <Modal
+        open={openModelModal}
+        title="Model Configuration"
+        footer={[
+          <Button key="cancel" onClick={() => setOpenModelModal(false)}>
+            Cancel
+          </Button>,
+          <Button
+            key="delete"
+            type="primary"
+            danger
+            onClick={deleteModel}
+            disabled={!editingModel || !customModels.includes(editingModel)}
+          >
+            Delete
+          </Button>,
+          <Button key="submit" type="primary" onClick={upsertModel}>
+            Submit
+          </Button>,
+        ]}
+      >
+        <Form form={modelForm} layout="vertical">
+          <Form.Item name="name" label="Name" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="maxTokens" label="Max Tokens" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+        </Form>
+      </Modal>
+    );
+  };
+
+  const displayProviderModal = () => {
+    return (
+      <Modal
+        open={openProviderModal}
+        onOk={upsertProvider}
+        onCancel={() => setOpenProviderModal(false)}
+        title="Provider Configuration"
+        footer={[
+          <Button key="cancel" onClick={() => setOpenProviderModal(false)}>
+            Cancel
+          </Button>,
+          <Button
+            key="delete"
+            type="primary"
+            danger
+            onClick={deleteProvider}
+            disabled={!editingProvider || !customProviders.includes(editingProvider)}
+          >
+            Delete
+          </Button>,
+          <Button key="submit" type="primary" onClick={upsertProvider}>
+            Submit
+          </Button>,
+        ]}
+      >
+        <Form form={providerForm} layout="vertical">
+          <Form.Item name="name" label="Name" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="apiType"
+            label="Api Type"
+            initialValue={"OpenAI"}
+            rules={[{ required: true }]}
+          >
+            <Select options={[{ value: "OpenAI" }, { value: "Google" }, { value: "Anthropic" }]} />
+          </Form.Item>
+          <Form.Item name="endpoint" label="Endpoint" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+        </Form>
+      </Modal>
+    );
+  };
+
+  const displayProviderSettings = (provider: ModelProvider) => {
+    const config = providerConfigs[provider.id] || new ProviderConfig(provider.id, false, "", []);
+    const providerModels = allModels.filter((model) => model.providerId === provider.id);
+    return (
+      <div key={provider.id}>
+        {displayProviderRow(provider, config)}
         {config.enabled && (
           <>
             <BlankDiv />
-            <Row style={{ width: "100%" }}>
+            <Row key={"apiKey"}>
               <Input
                 value={config.apiKey}
+                placeholder={`${provider.name} API Key`}
                 onChange={(e) => {
                   config.apiKey = e.target.value;
                   updateProviderConfig(config);
                 }}
-                placeholder={`${provider.name} API Key`}
               />
             </Row>
             <BlankDiv />
-
-            {models.map((model) => {
-              return (
-                <Row key={model.name} style={{ width: "100%" }}>
-                  <Col span={22} style={{ lineHeight: "2" }}>
-                    {model.name}
-                  </Col>
-                  <Col span={2}>
-                    <Switch
-                      size="small"
-                      checked={config.enabledModels.includes(model.name)}
-                      onChange={(checked) => {
-                        if (checked) {
-                          config.enabledModels.push(model.name);
-                        } else {
-                          config.enabledModels = config.enabledModels.filter(
-                            (m) => m !== model.name
-                          );
-                        }
-                        updateProviderConfig(config);
-                      }}
-                    />
-                  </Col>
-                </Row>
-              );
-            })}
+            {providerModels.map((model) => displayModelRow(provider, config, model))}
           </>
         )}
         <Divider />
@@ -85,5 +292,14 @@ export const ModelSettings = ({
     );
   };
 
-  return <>{MODEL_PROVIDERS.map((provider) => displayProviderSettings(provider))}</>;
+  return (
+    <>
+      {allProviders.map((provider) => displayProviderSettings(provider))}
+      {displayModelModal()}
+      {displayProviderModal()}
+      <Row justify="center">
+        <Button onClick={startAddingProvider}>Add Provider</Button>
+      </Row>
+    </>
+  );
 };

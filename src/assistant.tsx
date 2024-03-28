@@ -19,7 +19,11 @@ import { Settings } from "./components/settings";
 import { useStorage } from "./hooks/useStorage";
 import {
   Language,
+  Model,
+  ModelProvider,
   ProviderConfig,
+  SYSTEM_MODELS,
+  SYSTEM_PROVIDERS,
   WA_MENU_TASK_EXPLAIN_SELECTION,
   WA_MENU_TASK_SUMMARIZE_PAGE,
   WA_MESSAGE_TYPE_MENU_TASK,
@@ -28,15 +32,12 @@ import { getLocaleMessage } from "./utils/locale";
 import { ChatTask, Message, PromptTemplate, Reference } from "./utils/message";
 
 const Assistant = () => {
-  const [lang, setLang] = useStorage<Language>(
-    "sync",
-    "language",
-    chrome.i18n.getUILanguage() == "zh-CN" ? "zh" : "en"
-  );
+  const [lang, setLang] = useStorage<Language>("sync", "language", "en");
   const [modelName, setModelName] = useStorage<string>("local", "modelName", "");
   const [history, setHistory] = useStorage<Message[]>("local", "chatHistory", []);
   const [references, setReferences] = useStorage<Reference[]>("local", "references", []);
   const [chatTask, setChatTask] = useState<ChatTask | null>(null);
+  const [chatStatus, setChatStatus] = useState("");
   const [openSettings, setOpenSettings] = useState(false);
   const [openPromptSettings, setOpenPromptSettings] = useState(false);
   const [openModelSettings, setOpenModelSettings] = useState(false);
@@ -50,8 +51,16 @@ const Assistant = () => {
     "providerConfigs",
     {}
   );
+  const [customModels, setCustomModels] = useStorage<Model[]>("sync", "customModels", []);
+  const [customProviders, setCustomProviders] = useStorage<ModelProvider[]>(
+    "sync",
+    "customModels",
+    []
+  );
 
   const chatHistoryRef = useRef(null);
+  const allModels = [...SYSTEM_MODELS, ...customModels];
+  const allProviders = [...SYSTEM_PROVIDERS, ...customProviders];
 
   // handle tasks from menu
   const checkNewTaskFromBackground = async () => {
@@ -98,6 +107,8 @@ const Assistant = () => {
 
   const clearChatSession = () => {
     setHistory([]);
+    setChatStatus("");
+    setChatTask(null);
   };
 
   const clearAll = () => {
@@ -111,12 +122,14 @@ const Assistant = () => {
 
   const enabledModels = Object.values(providerConfigs)
     .filter((c) => c.enabled)
-    .flatMap((c) => c.enabledModels);
+    .flatMap((c) =>
+      allModels.filter((m) => m.providerId === c.providerId && c.enabledModels.includes(m.name))
+    );
 
   useEffect(() => {
-    if (!enabledModels.includes(modelName)) {
+    if (!enabledModels.map((m) => m.name).includes(modelName)) {
       if (enabledModels.length > 0) {
-        setModelName(enabledModels[0]);
+        setModelName(enabledModels[0].name);
       } else {
         setModelName("");
       }
@@ -151,6 +164,10 @@ const Assistant = () => {
           language={lang}
           providerConfigs={providerConfigs}
           setProviderConfigs={setProviderConfigs}
+          customModels={customModels}
+          setCustomModels={setCustomModels}
+          customProviders={customProviders}
+          setCustomProviders={setCustomProviders}
         />
       </Drawer>
       <Flex
@@ -220,15 +237,19 @@ const Assistant = () => {
             references={references}
             chatTask={chatTask}
             history={history}
+            chatStatus={chatStatus}
             setReferences={setReferences}
             setChatTask={setChatTask}
             setHistory={setHistory}
+            setChatStatus={setChatStatus}
+            allModels={enabledModels}
+            allProviders={allProviders}
           />
           <ChatActions
             lang={lang}
             promptTemplates={promptTemplates}
-            inChatTask={chatTask !== null}
             setChatTask={setChatTask}
+            chatStatus={chatStatus}
           />
         </div>
 
@@ -238,7 +259,7 @@ const Assistant = () => {
             value={modelName}
             style={{ width: "100%" }}
             placeholder="Select Model"
-            options={enabledModels.map((m: string) => ({ value: m }))}
+            options={enabledModels.map((m: Model) => ({ value: m.name }))}
             showSearch
           />
           <BlankDiv height={4} />

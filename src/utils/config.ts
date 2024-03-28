@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from "uuid";
+
 export type Language = "en" | "zh";
 
 export const WA_MENU_TASK_SUMMARIZE_PAGE = "summarize_page";
@@ -14,23 +16,27 @@ export type ModelApiType = "OpenAI" | "Google" | "Anthropic";
 export const LLM_MODELS = ["OpenAI", "Claude", "Gemini", "Kimi", "Yi", "Baichuan"];
 
 export class Model {
-  provider: string;
+  id: string;
+  providerId: string;
   name: string;
   maxTokens: number;
 
-  constructor(provider: string, name: string, maxTokens: number) {
-    this.provider = provider;
+  constructor(providerId: string, name: string, maxTokens: number, id?: string) {
+    this.id = id || uuidv4();
+    this.providerId = providerId;
     this.name = name;
     this.maxTokens = maxTokens;
   }
 }
 
 export class ModelProvider {
+  id: string;
   name: string;
   apiType: ModelApiType;
   endpoint: string;
 
-  constructor(name: string, apiType: ModelApiType, endpoint: string) {
+  constructor(name: string, apiType: ModelApiType, endpoint: string, id?: string) {
+    this.id = id || uuidv4();
     this.name = name;
     this.apiType = apiType;
     this.endpoint = endpoint;
@@ -38,38 +44,50 @@ export class ModelProvider {
 }
 
 export class ProviderConfig {
-  name: string;
+  providerId: string;
   enabled: boolean;
   apiKey: string;
   enabledModels: string[];
 
-  constructor(name: string, enabled: boolean, apiKey: string, enabledModels: string[]) {
-    this.name = name;
+  constructor(providerId: string, enabled: boolean, apiKey: string, enabledModels: string[]) {
+    this.providerId = providerId;
     this.enabled = enabled;
     this.apiKey = apiKey;
     this.enabledModels = enabledModels;
   }
 }
 
-export const MODEL_PROVIDERS: ModelProvider[] = [
-  new ModelProvider("OpenAI", "OpenAI", "https://api.openai.com/v1/"),
-  new ModelProvider("Claude", "Anthropic", ""),
-  new ModelProvider("Gemini", "Google", ""),
-  new ModelProvider("Moonshot", "OpenAI", "https://api.moonshot.cn/v1/"),
-  new ModelProvider("Yi", "OpenAI", "https://api.lingyiwanwu.com/v1/"),
-  new ModelProvider("Baichuan", "OpenAI", "https://api.baichuan-ai.com/v1/"),
+const OpenAI = new ModelProvider("OpenAI", "OpenAI", "https://api.openai.com/v1/", "OpenAI");
+const Anthropic = new ModelProvider("Anthropic", "Anthropic", "", "Anthropic");
+const Google = new ModelProvider("Google", "Google", "", "Google");
+const Moonshot = new ModelProvider("Moonshot", "OpenAI", "https://api.moonshot.cn/v1/", "Moonshot");
+const Yi = new ModelProvider("Yi", "OpenAI", "https://api.lingyiwanwu.com/v1/", "Yi");
+const Baichuan = new ModelProvider(
+  "Baichuan",
+  "OpenAI",
+  "https://api.baichuan-ai.com/v1/",
+  "Baichuan"
+);
+
+export const SYSTEM_PROVIDERS: ModelProvider[] = [
+  OpenAI,
+  Anthropic,
+  Google,
+  Moonshot,
+  Yi,
+  Baichuan,
 ];
 
-export const MODELS: Model[] = [
-  new Model("OpenAI", "gpt-3.5-turbo", 4 * 1024),
-  new Model("OpenAI", "gpt-4", 4 * 1024),
-  new Model("Anthropic", "claude-3-haiku-20240307", 128 * 1024),
-  new Model("Anthropic", "claude-3-sonnet-20240229", 128 * 1024),
-  new Model("Anthropic", "claude-3-opus-20240229", 128 * 1024),
-  new Model("Google", "gemini-pro", 8 * 1024),
-  new Model("Moonshot", "moonshot-v1-8k", 8 * 1024),
-  new Model("Moonshot", "moonshot-v1-32k", 32 * 1024),
-  new Model("Yi", "yi-34b-chat-0205", 4 * 1024),
-  new Model("Yi", "yi-34b-chat-200k", 128 * 1024),
-  new Model("Baichuan", "Baichuan2-Turbo", 4 * 1024),
+export const SYSTEM_MODELS: Model[] = [
+  new Model(OpenAI.id, "gpt-3.5-turbo", 4 * 1024),
+  new Model(OpenAI.id, "gpt-4", 4 * 1024),
+  new Model(Anthropic.id, "claude-3-haiku-20240307", 128 * 1024),
+  new Model(Anthropic.id, "claude-3-sonnet-20240229", 128 * 1024),
+  new Model(Anthropic.id, "claude-3-opus-20240229", 128 * 1024),
+  new Model(Google.id, "gemini-pro", 8 * 1024),
+  new Model(Moonshot.id, "moonshot-v1-8k", 8 * 1024),
+  new Model(Moonshot.id, "moonshot-v1-32k", 32 * 1024),
+  new Model(Yi.id, "yi-34b-chat-0205", 4 * 1024),
+  new Model(Yi.id, "yi-34b-chat-200k", 128 * 1024),
+  new Model(Baichuan.id, "Baichuan2-Turbo", 4 * 1024),
 ];

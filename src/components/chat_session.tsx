@@ -1,8 +1,7 @@
-import { RobotOutlined, UserOutlined } from "@ant-design/icons";
 import markdownit from "markdown-it";
 import React, { useEffect, useState } from "react";
 import { callClaude } from "../utils/anthropic_api";
-import { Language, MODELS, MODEL_PROVIDERS, ProviderConfig } from "../utils/config";
+import { Language, Model, ModelProvider, ProviderConfig } from "../utils/config";
 import { callGemini } from "../utils/google_api";
 import { getLocaleMessage } from "../utils/locale";
 import { ChatTask, Message, Reference } from "../utils/message";
@@ -13,27 +12,34 @@ import { addPageToReference } from "./references";
 export const ChatSession = ({
   lang,
   modelName,
+  allModels,
+  allProviders,
   providerConfigs,
   references,
   chatTask,
   history,
+  chatStatus,
   setReferences,
   setChatTask,
   setHistory,
+  setChatStatus,
 }: {
   lang: Language;
   modelName: string;
+  allModels: Model[];
+  allProviders: ModelProvider[];
   providerConfigs: Record<string, ProviderConfig>;
   references: Reference[];
   chatTask: ChatTask | null;
   history: Message[];
+  chatStatus: string;
   setReferences: (value: Reference[]) => void;
   setChatTask: (task: ChatTask | null) => void;
   setHistory: (history: Message[]) => void;
+  setChatStatus: (status: string) => void;
 }) => {
   const [currentAnswer, setCurrentAnswer] = useState("");
   const [round, setRound] = useState(0);
-  const [processing, setProcessing] = useState(false);
 
   const md = markdownit();
 
@@ -63,18 +69,13 @@ export const ChatSession = ({
     if (errorMsg) {
       setCurrentAnswer((answer) => answer + ` [ERROR]:${errorMsg}`);
     }
-    setProcessing(false);
+    setChatStatus("");
     setChatTask(null);
   };
 
-  const chatWithLLM = async (content: string, context_references: Reference[]) => {
+  const initMessages = (content: string, context_references: Reference[]) => {
     const query = new Message("user", content);
     const reply = new Message("assistant", "", modelName);
-    setProcessing(true);
-    setHistory([...history, query, reply]);
-    setCurrentAnswer("");
-    setRound((round) => round + 1);
-
     let systemPrompt = `${getLocaleMessage(lang, "prompt_system")}\n`;
     if (context_references.length > 0) {
       systemPrompt += `${getLocaleMessage(lang, "prompt_useReferences")}\n`;
@@ -88,21 +89,32 @@ export const ChatSession = ({
     }
     const systemMsg = new Message("system", systemPrompt);
     const messages = [systemMsg, ...history, query];
-    const model = MODELS.find((m) => m.name === modelName);
+    setHistory([...history, query, reply]);
+    return messages;
+  };
+
+  const chatWithLLM = async (content: string, context_references: Reference[]) => {
+    const model = allModels.find((m) => m.name === modelName);
     if (!model) {
-      console.error("invalid model=", modelName);
+      setChatStatus(`model ${modelName} not found`);
       return;
     }
-    const provider = MODEL_PROVIDERS.find((p) => p.name === model.provider);
+    const provider = allProviders.find((p) => p.id === model.providerId);
     if (!provider) {
-      console.error("invalid provider=", model.provider);
+      setChatStatus(`provider of ${modelName} not found`);
       return;
     }
-    const apiKey = providerConfigs[model.provider]?.apiKey;
+    const apiKey = providerConfigs[provider.id]?.apiKey;
     if (!apiKey) {
-      console.error("missing api key for provider=", model.provider);
+      setChatStatus(`api key of ${provider.name}:${modelName} not found`);
       return;
     }
+
+    const messages = initMessages(content, context_references);
+    setCurrentAnswer("");
+    setRound((round) => round + 1);
+    setChatStatus("processing");
+
     if (provider.apiType === "Google") {
       callGemini(apiKey, model, messages, onResponseContent, onResponseFinish);
     } else if (provider.apiType === "Anthropic") {
@@ -117,13 +129,16 @@ export const ChatSession = ({
     if (!chatTask) {
       return;
     }
-    if (!chatTask.prompt || processing) {
-      console.error("invalid chat task=", chatTask, "processing=", processing);
+    if (chatStatus === "processing") {
+      return;
+    }
+    if (!chatTask.prompt) {
+      setChatStatus("empty prompt");
+      setChatTask(null);
       return;
     }
     console.log("chat task=", chatTask);
     if (chatTask.reference_type === "page") {
-      console.debug("add page reference");
       addPageToReference(references, setReferences).then((pageRef) => {
         if (pageRef) {
           const prompt = `${getLocaleMessage(lang, "prompt_pageReference")}\n\n\`\`\`${
@@ -131,11 +146,11 @@ export const ChatSession = ({
           }\`\`\`\n\n${chatTask.prompt}`;
           chatWithLLM(prompt, [pageRef]);
         } else {
+          setChatStatus("fail to get content of current page");
           setChatTask(null);
         }
       });
     } else if (chatTask.reference_type === "selection") {
-      console.debug("add selection reference");
       getCurrentSelection().then((selection) => {
         if (selection) {
           console.log("selection is", selection);
@@ -145,12 +160,11 @@ export const ChatSession = ({
           )}\n\n\`\`\`${selection}\`\`\`\n\n${chatTask.prompt}`;
           chatWithLLM(prompt, references);
         } else {
+          setChatStatus("fail to get selection of current page");
           setChatTask(null);
         }
       });
     } else {
-      console.log("chat task=", chatTask.reference_type);
-
       chatWithLLM(chatTask.prompt, references);
     }
   }, [chatTask]);

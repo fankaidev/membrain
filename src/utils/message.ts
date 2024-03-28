@@ -1,4 +1,4 @@
-import { uniqueId } from "lodash";
+import { v4 as uuidv4 } from "uuid";
 
 export class Message {
   role: string;
@@ -53,7 +53,7 @@ export class PromptTemplate {
   reference_type: ChatReferenceType;
 
   constructor(name: string, prompt: string, reference_type: ChatReferenceType) {
-    this.id = uniqueId();
+    this.id = uuidv4();
     this.name = name;
     this.prompt = prompt;
     this.reference_type = reference_type;

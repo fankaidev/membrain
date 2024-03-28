@@ -2,7 +2,7 @@ import {
   DeploymentUnitOutlined,
   FormOutlined,
   PoweroffOutlined,
-  SettingOutlined
+  SettingOutlined,
 } from "@ant-design/icons";
 import { Button, Drawer, Flex, Row, Select, Tooltip } from "antd";
 import React, { useEffect, useRef, useState } from "react";

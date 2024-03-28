@@ -63,13 +63,7 @@ const Google = new ModelProvider("Google", "Google", "", "Google");
 const Moonshot = new ModelProvider("Moonshot", "OpenAI", "https://api.moonshot.cn/v1/", "Moonshot");
 const Yi = new ModelProvider("Yi", "OpenAI", "https://api.lingyiwanwu.com/v1/", "Yi");
 
-export const SYSTEM_PROVIDERS: ModelProvider[] = [
-  OpenAI,
-  Anthropic,
-  Google,
-  Moonshot,
-  Yi,
-];
+export const SYSTEM_PROVIDERS: ModelProvider[] = [OpenAI, Anthropic, Google, Moonshot, Yi];
 
 export const SYSTEM_MODELS: Model[] = [
   new Model(OpenAI.id, "gpt-3.5-turbo", 4 * 1024),

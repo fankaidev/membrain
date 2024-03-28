@@ -50,7 +50,6 @@ const getPageSelectionText = async (tab: chrome.tabs.Tab): Promise<string> => {
     console.info("fail to get selection text", e);
     return "";
   }
-
 };
 
 export const getCurrentSelection = async (): Promise<string> => {

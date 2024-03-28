@@ -82,7 +82,7 @@ export const ModelSettings = ({
       } else {
         const model = new Model(editingProvider!.id, values.name, values.maxTokens);
         setCustomModels([...customModels, model]);
-        const config = providerConfigs[editingProvider!.id]
+        const config = providerConfigs[editingProvider!.id];
         config.enabledModels.push(model.name);
         updateProviderConfig(config);
       }

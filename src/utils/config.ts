@@ -62,12 +62,6 @@ const Anthropic = new ModelProvider("Anthropic", "Anthropic", "", "Anthropic");
 const Google = new ModelProvider("Google", "Google", "", "Google");
 const Moonshot = new ModelProvider("Moonshot", "OpenAI", "https://api.moonshot.cn/v1/", "Moonshot");
 const Yi = new ModelProvider("Yi", "OpenAI", "https://api.lingyiwanwu.com/v1/", "Yi");
-const Baichuan = new ModelProvider(
-  "Baichuan",
-  "OpenAI",
-  "https://api.baichuan-ai.com/v1/",
-  "Baichuan"
-);
 
 export const SYSTEM_PROVIDERS: ModelProvider[] = [
   OpenAI,
@@ -75,7 +69,6 @@ export const SYSTEM_PROVIDERS: ModelProvider[] = [
   Google,
   Moonshot,
   Yi,
-  Baichuan,
 ];
 
 export const SYSTEM_MODELS: Model[] = [
@@ -89,5 +82,4 @@ export const SYSTEM_MODELS: Model[] = [
   new Model(Moonshot.id, "moonshot-v1-32k", 32 * 1024),
   new Model(Yi.id, "yi-34b-chat-0205", 4 * 1024),
   new Model(Yi.id, "yi-34b-chat-200k", 128 * 1024),
-  new Model(Baichuan.id, "Baichuan2-Turbo", 4 * 1024),
 ];

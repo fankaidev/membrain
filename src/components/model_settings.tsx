@@ -1,16 +1,15 @@
-import { Button, Col, Divider, Form, Input, Modal, Radio, Row, Select, Switch } from "antd";
+import { EditOutlined, PlusCircleOutlined } from "@ant-design/icons";
+import { Button, Col, Divider, Form, Input, Modal, Row, Select, Switch } from "antd";
 import React, { useState } from "react";
 import {
   Language,
-  SYSTEM_MODELS,
-  SYSTEM_PROVIDERS,
+  Model,
   ModelProvider,
   ProviderConfig,
-  Model,
+  SYSTEM_MODELS,
+  SYSTEM_PROVIDERS,
 } from "../utils/config";
 import { BlankDiv } from "./common";
-import { EditOutlined, PlusCircleOutlined } from "@ant-design/icons";
-import OpenAI from "openai";
 
 export const ModelSettings = ({
   language,
@@ -60,6 +59,8 @@ export const ModelSettings = ({
       } else {
         const provider = new ModelProvider(values.name, "OpenAI", values.endpoint);
         setCustomProviders([...customProviders, provider]);
+        const config = new ProviderConfig(provider.id, true, "", []);
+        updateProviderConfig(config);
       }
       setOpenProviderModal(false);
       setEditingModel(null);
@@ -81,6 +82,9 @@ export const ModelSettings = ({
       } else {
         const model = new Model(editingProvider!.id, values.name, values.maxTokens);
         setCustomModels([...customModels, model]);
+        const config = providerConfigs[editingProvider!.id]
+        config.enabledModels.push(model.name);
+        updateProviderConfig(config);
       }
       setOpenModelModal(false);
       setEditingModel(null);
@@ -94,6 +98,7 @@ export const ModelSettings = ({
     setEditingModel(null);
     setEditingProvider(null);
     setCustomProviders(customProviders.filter((p) => p.id !== editingProvider?.id));
+    setCustomModels(customModels.filter((m) => m.providerId !== editingProvider?.id));
   };
 
   const deleteModel = () => {

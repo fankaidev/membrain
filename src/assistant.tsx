@@ -1,9 +1,8 @@
 import {
-  ApiOutlined,
   DeploymentUnitOutlined,
   FormOutlined,
   PoweroffOutlined,
-  SettingOutlined,
+  SettingOutlined
 } from "@ant-design/icons";
 import { Button, Drawer, Flex, Row, Select, Tooltip } from "antd";
 import React, { useEffect, useRef, useState } from "react";
@@ -54,7 +53,7 @@ const Assistant = () => {
   const [customModels, setCustomModels] = useStorage<Model[]>("sync", "customModels", []);
   const [customProviders, setCustomProviders] = useStorage<ModelProvider[]>(
     "sync",
-    "customModels",
+    "customProviders",
     []
   );
 
@@ -134,6 +133,7 @@ const Assistant = () => {
         setModelName("");
       }
     }
+    console.debug("enabled models=", enabledModels);
   }, [providerConfigs]);
 
   return (

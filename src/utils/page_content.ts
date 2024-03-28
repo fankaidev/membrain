@@ -11,40 +11,46 @@ const getCurrentTab = async () => {
     return null;
   }
   if (tab.url!.includes("chrome://")) {
-    console.debug("skip page:", tab.url ? tab.url : "");
+    console.info("skip page:", tab.url ? tab.url : "");
     return null;
   }
   return tab;
 };
 
 const getPageMarkDown = async (tab: chrome.tabs.Tab) => {
-  const [ret] = await chrome.scripting.executeScript({
-    target: { tabId: tab.id! },
-    func: () => {
-      return document.documentElement.outerHTML;
-    },
-  });
-
-  const doc = new DOMParser().parseFromString(ret.result as string, "text/html");
-  const article = new Readability(doc).parse();
-  console.debug("article=", article);
-
-  const turndownService = new TurndownService();
-  const markdown = turndownService.turndown(article?.content || "");
-  console.debug("markdown=", markdown);
-
-  return markdown;
+  try {
+    const [ret] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id! },
+      func: () => {
+        return document.documentElement.outerHTML;
+      },
+    });
+    const doc = new DOMParser().parseFromString(ret.result as string, "text/html");
+    const article = new Readability(doc).parse();
+    const turndownService = new TurndownService();
+    const markdown = turndownService.turndown(article?.content || "");
+    console.debug("markdown=", markdown);
+    return markdown;
+  } catch (e) {
+    console.info("fail to get page content", e);
+    return "";
+  }
 };
 
 const getPageSelectionText = async (tab: chrome.tabs.Tab): Promise<string> => {
-  const [ret] = await chrome.scripting.executeScript({
-    target: { tabId: tab.id! },
-    func: () => {
-      return window.getSelection()?.toString();
-    },
-  });
+  try {
+    const [ret] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id! },
+      func: () => {
+        return window.getSelection()?.toString();
+      },
+    });
+    return ret.result || "";
+  } catch (e) {
+    console.info("fail to get selection text", e);
+    return "";
+  }
 
-  return ret.result || "";
 };
 
 export const getCurrentSelection = async (): Promise<string> => {

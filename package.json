@@ -1,6 +1,6 @@
 {
   "name": "web-assistant",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Web Assistant - second brain in your browser",
   "scripts": {
     "watch": "webpack --config webpack/webpack.dev.js --watch",

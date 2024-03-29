@@ -1,31 +1,31 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { MessageParam } from "@anthropic-ai/sdk/resources/index.mjs";
-import { Message } from "./message";
 import { Model } from "./config";
+import { Message } from "./message";
 
-function prepareChatData(
+const prepareChatData = (
   query_messages: Message[],
   model: string,
   temperature: number,
   max_tokens: number
-) {
-  const messages: MessageParam[] = [];
-  for (const message of query_messages) {
-    if (message.content && message.content.trim() != "<error>") {
-      messages.push({
-        role: message.role === "assistant" ? "assistant" : "user",
-        content: message.content,
-      });
-    }
-  }
+) => {
+  const system_msg = query_messages[0].content;
+  const messages = query_messages
+    .slice(1)
+    .filter((message) => message.content && message.content.trim() != "<error>")
+    .map((message) => ({
+      role: message.role as "user" | "assistant",
+      content: message.content,
+    }));
+
   const data = {
     model,
+    system: system_msg,
     messages,
     temperature,
     max_tokens,
   };
   return data;
-}
+};
 
 export const callClaude = async (
   apiKey: string,
@@ -35,10 +35,6 @@ export const callClaude = async (
   onFinish: (_?: string) => void
 ) => {
   const anthropic = new Anthropic({ apiKey });
-  if (messages.length > 1) {
-    const first = new Message("user", messages[0].content + "\n\n" + messages[1].content);
-    messages = [first, ...messages.slice(2)];
-  }
   const data = prepareChatData(messages, model.name, 0.3, model.maxTokens);
   await anthropic.messages
     .stream(data)

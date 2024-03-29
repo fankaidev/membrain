@@ -68,12 +68,12 @@ export const SYSTEM_PROVIDERS: ModelProvider[] = [OpenAI, Anthropic, Google, Moo
 export const SYSTEM_MODELS: Model[] = [
   new Model(OpenAI.id, "gpt-3.5-turbo", 4 * 1024),
   new Model(OpenAI.id, "gpt-4", 4 * 1024),
-  new Model(Anthropic.id, "claude-3-haiku-20240307", 128 * 1024),
-  new Model(Anthropic.id, "claude-3-sonnet-20240229", 128 * 1024),
-  new Model(Anthropic.id, "claude-3-opus-20240229", 128 * 1024),
+  new Model(Anthropic.id, "claude-3-haiku-20240307", 4 * 1024),
+  new Model(Anthropic.id, "claude-3-sonnet-20240229", 4 * 1024),
+  new Model(Anthropic.id, "claude-3-opus-20240229", 4 * 1024),
   new Model(Google.id, "gemini-pro", 8 * 1024),
   new Model(Moonshot.id, "moonshot-v1-8k", 8 * 1024),
-  new Model(Moonshot.id, "moonshot-v1-32k", 32 * 1024),
+  new Model(Moonshot.id, "moonshot-v1-32k", 8 * 1024),
   new Model(Yi.id, "yi-34b-chat-0205", 4 * 1024),
-  new Model(Yi.id, "yi-34b-chat-200k", 128 * 1024),
+  new Model(Yi.id, "yi-34b-chat-200k", 4 * 1024),
 ];

@@ -7,12 +7,12 @@ import { ChatTask } from "../utils/message";
 
 export const ChatInput = ({
   lang,
-  inChatTask,
+  enabled,
   setChatTask,
   clearChatSession,
 }: {
   lang: Language;
-  inChatTask: boolean;
+  enabled: boolean;
   setChatTask: (task: ChatTask | null) => void;
   clearChatSession: () => void;
 }) => {
@@ -23,7 +23,7 @@ export const ChatInput = ({
   };
 
   const chat = () => {
-    if (inChatTask || !userInput.trim()) {
+    if (!enabled || !userInput.trim()) {
       return;
     }
     setChatTask(new ChatTask(userInput.trim(), "all"));

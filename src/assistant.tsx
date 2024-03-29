@@ -194,7 +194,7 @@ const Assistant = () => {
               type="text"
               size="middle"
               onClick={() => setOpenSettings(true)}
-            />{" "}
+            />
           </Tooltip>
           <Tooltip title="prompt settings">
             <Button
@@ -202,7 +202,7 @@ const Assistant = () => {
               type="text"
               size="middle"
               onClick={() => setOpenPromptSettings(true)}
-            />{" "}
+            />
           </Tooltip>
           <Tooltip title="model settings">
             <Button
@@ -210,7 +210,7 @@ const Assistant = () => {
               type="text"
               size="middle"
               onClick={() => setOpenModelSettings(true)}
-            />{" "}
+            />
           </Tooltip>
         </Row>
 
@@ -254,18 +254,33 @@ const Assistant = () => {
         </div>
 
         <div id="inputs" style={{ padding: "8px 4px 0px 4px" }}>
-          <Select
-            onChange={selectModel}
-            value={modelName}
-            style={{ width: "100%" }}
-            placeholder="Select Model"
-            options={enabledModels.map((m: Model) => ({ value: m.name }))}
-            showSearch
-          />
+          {enabledModels.length > 0 && (
+            <Select
+              onChange={selectModel}
+              value={modelName}
+              style={{ width: "100%" }}
+              placeholder="Select Model"
+              options={enabledModels.map((m: Model) => ({ value: m.name }))}
+              showSearch
+            />
+          )}
+          {enabledModels.length === 0 && (
+            <Row>
+              <Button
+                icon={<DeploymentUnitOutlined />}
+                type="text"
+                size="middle"
+                onClick={() => setOpenModelSettings(true)}
+                danger
+              >
+                API keys are required
+              </Button>
+            </Row>
+          )}
           <BlankDiv height={4} />
           <ChatInput
             lang={lang}
-            inChatTask={chatTask !== null}
+            enabled={chatTask === null && enabledModels.length > 0}
             setChatTask={setChatTask}
             clearChatSession={clearChatSession}
           />

@@ -1,5 +1,5 @@
 import { EditOutlined, PlusCircleOutlined } from "@ant-design/icons";
-import { Button, Col, Divider, Form, Input, Modal, Row, Select, Switch } from "antd";
+import { Button, Col, Divider, Form, Input, Modal, Row, Select, Switch, Tooltip } from "antd";
 import React, { useState } from "react";
 import {
   Language,
@@ -133,6 +133,17 @@ export const ModelSettings = ({
   };
 
   const displayProviderRow = (provider: ModelProvider, config: ProviderConfig) => {
+    const toggleProvider = (checked: boolean) => {
+      if (checked) {
+        const providerModels = allModels.filter((model) => model.providerId === provider.id);
+        config.enabledModels = providerModels.map((model) => model.name);
+      } else {
+        config.enabledModels = [];
+      }
+      config.enabled = checked;
+      updateProviderConfig(config);
+    };
+
     return (
       <Row key={provider.id} style={{ width: "100%" }} align={"middle"}>
         <Col span={16} style={{ lineHeight: "2" }}>
@@ -140,27 +151,34 @@ export const ModelSettings = ({
         </Col>
         <Col span={2} offset={1}>
           {customProviders.includes(provider) && (
-            <EditOutlined onClick={() => startEditingProvider(provider)} />
+            <Tooltip title="edit provider">
+              <EditOutlined onClick={() => startEditingProvider(provider)} />
+            </Tooltip>
           )}
         </Col>
 
         <Col span={2}>
-          <PlusCircleOutlined onClick={() => startAddingModel(provider)} />
+          <Tooltip title="add model">
+            <PlusCircleOutlined onClick={() => startAddingModel(provider)} />
+          </Tooltip>
         </Col>
         <Col span={3}>
-          <Switch
-            checked={config.enabled}
-            onChange={(checked) => {
-              config.enabled = checked;
-              updateProviderConfig(config);
-            }}
-          />
+          <Switch checked={config.enabled} onChange={toggleProvider} />
         </Col>
       </Row>
     );
   };
 
   const displayModelRow = (provider: ModelProvider, config: ProviderConfig, model: Model) => {
+    const toggleModel = (checked: boolean) => {
+      if (checked) {
+        config.enabledModels.push(model.name);
+      } else {
+        config.enabledModels = config.enabledModels.filter((m) => m !== model.name);
+      }
+      updateProviderConfig(config);
+    };
+
     return (
       <Row key={model.id} style={{ width: "100%" }}>
         <Col span={20} style={{ lineHeight: "2" }}>
@@ -168,21 +186,16 @@ export const ModelSettings = ({
         </Col>
         <Col span={2}>
           {customModels.includes(model) && (
-            <EditOutlined onClick={() => startEditingModel(provider, model)} />
+            <Tooltip title="edit model">
+              <EditOutlined onClick={() => startEditingModel(provider, model)} />
+            </Tooltip>
           )}
         </Col>
         <Col span={2}>
           <Switch
             size="small"
             checked={config.enabledModels.includes(model.name)}
-            onChange={(checked) => {
-              if (checked) {
-                config.enabledModels.push(model.name);
-              } else {
-                config.enabledModels = config.enabledModels.filter((m) => m !== model.name);
-              }
-              updateProviderConfig(config);
-            }}
+            onChange={toggleModel}
           />
         </Col>
       </Row>

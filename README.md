@@ -4,7 +4,7 @@
 
 ## Key Features
 
-### Easy access to AI models
+### Instant access to AI models
 
 This extension provides smooth experience of AI when you are surfing the web.
 You can chat with AI models in Chrome side panel, without navigating from current web page.
@@ -17,6 +17,14 @@ You may add multiple relevant web pages or selection texts as references for mod
 By providing high quality contexts, you can make the best use of AI models.
 
 ![screenshot-1](docs/images/screenshot-1.png)
+
+### Easy customization
+
+This extension integrated a lot of popular AI model providers and models, with more to come.
+And it's very easy to add new ones by yourself as long as the API format is supported.
+Also you can easily add new prompt templates so that you could talk to AI models in one click.
+
+![screenshot-1](docs/images/screenshot-3.png)
 
 ### Full privacy
 

@@ -61,6 +61,20 @@ export const getCurrentSelection = async (): Promise<string> => {
   return await getPageSelectionText(tab);
 };
 
+export const getCurrentSelectionRef = async (): Promise<Reference | null> => {
+  const tab = await getCurrentTab();
+  if (!tab) {
+    return null;
+  }
+
+  const content = await getPageSelectionText(tab);
+  if (!content) {
+    return null;
+  }
+  const selectionRef = new Reference("text", "@" + tab.title!, tab.url!, content);
+  return selectionRef;
+};
+
 export const getCurrentPageRef = async (): Promise<Reference | null> => {
   const tab = await getCurrentTab();
   if (!tab) {

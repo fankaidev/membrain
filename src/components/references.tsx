@@ -69,20 +69,17 @@ export const ReferenceBox = ({
       );
     };
 
-    const panels = references.map((ref, index) => {
+    const items = references.map((ref, index) => {
       const html = md.render(ref.content);
-      return (
-        <Collapse.Panel
-          header={ellipse(`${ref.type}: ${ref.title}`) + ` (${ref.content.length})`}
-          key={"ref" + index}
-          extra={displayRemoveReferenceIcon(ref)}
-        >
-          <div dangerouslySetInnerHTML={{ __html: html }} />
-        </Collapse.Panel>
-      );
+      return {
+        key: "ref" + index,
+        label: ellipse(`${ref.type}: ${ref.title}`) + ` (${ref.content.length})`,
+        children: <div dangerouslySetInnerHTML={{ __html: html }} />,
+        extra: displayRemoveReferenceIcon(ref),
+      };
     });
 
-    return <Collapse style={{ width: "100%" }}>{panels}</Collapse>;
+    return <Collapse style={{ width: "100%" }} items={items} />;
   };
 
   const addSelectionToReference = async (): Promise<Reference | null> => {

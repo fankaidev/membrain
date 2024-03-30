@@ -1,9 +1,14 @@
-import { DeleteOutlined, FileAddOutlined, FileTextOutlined } from "@ant-design/icons";
+import {
+  ChromeOutlined,
+  DeleteOutlined,
+  FileAddOutlined,
+  FileTextOutlined,
+} from "@ant-design/icons";
 import { Button, Collapse, Flex, Tag, Tooltip } from "antd";
 import markdownit from "markdown-it";
 import React from "react";
 import { Reference } from "../utils/message";
-import { getCurrentPageRef, getCurrentSelection } from "../utils/page_content";
+import { getCurrentPageRef, getCurrentSelectionRef } from "../utils/page_content";
 import { BlankDiv } from "./common";
 
 export const addPageToReference = async (
@@ -72,8 +77,20 @@ export const ReferenceBox = ({
       const html = md.render(ref.content);
       return {
         key: "ref" + index,
-        label: ellipse(`${ref.type}: ${ref.title}`) + ` (${ref.content.length})`,
-        children: <div dangerouslySetInnerHTML={{ __html: html }} />,
+        label: (
+          <>
+            {ref.type == "webpage" ? <ChromeOutlined /> : <FileTextOutlined />}
+            {ellipse(` ${ref.title}`) + ` (${ref.content.length})`}
+          </>
+        ),
+        children: (
+          <div>
+            <a target="_blank" href={ref.url}>
+              {ref.url}
+            </a>
+            <div dangerouslySetInnerHTML={{ __html: html }} />
+          </div>
+        ),
         extra: displayRemoveReferenceIcon(ref),
       };
     });
@@ -82,9 +99,8 @@ export const ReferenceBox = ({
   };
 
   const addSelectionToReference = async (): Promise<Reference | null> => {
-    const selectionText = await getCurrentSelection();
-    if (selectionText) {
-      const selectionRef = new Reference("text", ellipse(selectionText, 20), "", selectionText);
+    const selectionRef = await getCurrentSelectionRef();
+    if (selectionRef) {
       setReferences([...references, selectionRef]);
       return selectionRef;
     } else {

@@ -12,8 +12,7 @@ export const ChatSession = ({
   displayText,
   chatLanguage,
   modelName,
-  allModels,
-  allProviders,
+  enabledModels,
   providerConfigs,
   references,
   chatTask,
@@ -27,8 +26,7 @@ export const ChatSession = ({
   displayText: (text: string) => string;
   chatLanguage: string;
   modelName: string;
-  allModels: Model[];
-  allProviders: ModelProvider[];
+  enabledModels: [Model, ModelProvider][];
   providerConfigs: Record<string, ProviderConfig>;
   references: Reference[];
   chatTask: ChatTask | null;
@@ -96,16 +94,12 @@ export const ChatSession = ({
   };
 
   const chatWithLLM = async (content: string, context_references: Reference[]) => {
-    const model = allModels.find((m) => m.name === modelName);
-    if (!model) {
+    const modelAndProvider = enabledModels.find((m) => m[0].name === modelName);
+    if (!modelAndProvider) {
       setChatStatus(`model ${modelName} not found`);
       return;
     }
-    const provider = allProviders.find((p) => p.id === model.providerId);
-    if (!provider) {
-      setChatStatus(`provider of ${modelName} not found`);
-      return;
-    }
+    const [model, provider] = modelAndProvider;
     const apiKey = providerConfigs[provider.id]?.apiKey;
     if (!apiKey) {
       setChatStatus(`api key of ${provider.name}:${modelName} not found`);

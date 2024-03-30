@@ -119,26 +119,25 @@ export const Assistant = () => {
     setReferences([]);
   };
 
-  const selectModel = (modelName: string) => {
-    setModelName(modelName);
-  };
-
-  const enabledModels = Object.values(providerConfigs)
-    .filter((c) => c.enabled)
-    .flatMap((c) =>
-      allModels.filter((m) => m.providerId === c.providerId && c.enabledModels.includes(m.name))
+  const enabledModels: [Model, ModelProvider][] = allProviders
+    .map((p) => [p, providerConfigs[p.id]] as [ModelProvider, ProviderConfig])
+    .filter(([p, c]) => c && c.enabled)
+    .flatMap(([p, c]) =>
+      allModels
+        .filter((m) => m.providerId === p.id && c.enabledModels.includes(m.name))
+        .map((m) => [m, p] as [Model, ModelProvider])
     );
 
   useEffect(() => {
-    if (!enabledModels.map((m) => m.name).includes(modelName)) {
+    if (!enabledModels.map(([m, p]) => m.name).includes(modelName)) {
       if (enabledModels.length > 0) {
-        setModelName(enabledModels[0].name);
+        setModelName(enabledModels[0][0].name);
       } else {
         setModelName("");
       }
     }
     console.debug("enabled models=", enabledModels);
-  }, [providerConfigs]);
+  }, [providerConfigs, enabledModels]);
 
   return (
     <>
@@ -261,8 +260,7 @@ export const Assistant = () => {
             setChatTask={setChatTask}
             setHistory={setHistory}
             setChatStatus={setChatStatus}
-            allModels={enabledModels}
-            allProviders={allProviders}
+            enabledModels={enabledModels}
           />
           <ChatActions
             displayText={displayText}
@@ -275,11 +273,11 @@ export const Assistant = () => {
         <div id="inputs" style={{ padding: "8px 4px 0px 4px" }}>
           {enabledModels.length > 0 && (
             <Select
-              onChange={selectModel}
+              onChange={setModelName}
               value={modelName}
               style={{ width: "100%" }}
               placeholder="Select Model"
-              options={enabledModels.map((m: Model) => ({ value: m.name }))}
+              options={enabledModels.map((m) => ({ value: m[0].name }))}
               showSearch
             />
           )}

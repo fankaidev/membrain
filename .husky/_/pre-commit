@@ -1,1 +1,2 @@
-npm run style
+pnpm style
+pnpm test

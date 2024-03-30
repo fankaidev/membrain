@@ -44,13 +44,21 @@ export const ChatActions = ({
           {chatStatus}
         </Tag>
       )}
-      <Flex id="actions" wrap="wrap" gap="small">
-        {chatTasks.map(([title, task], index) => (
-          <Button size="small" type="dashed" onClick={() => setChatTask(task)} key={index}>
-            {title}
-          </Button>
-        ))}
-      </Flex>
+      {chatStatus !== "processing" && (
+        <Flex id="actions" wrap="wrap" gap="small" style={{ margin: "8px" }}>
+          {chatTasks.map(([title, task], index) => (
+            <Button
+              size="small"
+              type="dashed"
+              style={{ borderColor: "DeepSkyBlue" }}
+              onClick={() => setChatTask(task)}
+              key={index}
+            >
+              {title}
+            </Button>
+          ))}
+        </Flex>
+      )}
     </>
   );
 };

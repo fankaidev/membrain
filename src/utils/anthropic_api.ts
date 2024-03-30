@@ -43,6 +43,8 @@ export const callClaude = async (
     })
     .on("error", (error) => {
       onFinish(error.message);
+    })
+    .on("end", () => {
+      onFinish();
     });
-  onFinish();
 };

@@ -133,13 +133,7 @@ export const ReferenceBox = ({
             />
           </Tooltip>
           <Tooltip title={displayText("tooltip_clearReferences")}>
-            <Button
-              icon={<DeleteOutlined />}
-              type="text"
-              size="small"
-              danger
-              onClick={clearReferences}
-            />
+            <Button icon={<DeleteOutlined />} type="text" size="small" onClick={clearReferences} />
           </Tooltip>
         </span>
       </Flex>

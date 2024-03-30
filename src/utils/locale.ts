@@ -50,7 +50,7 @@ const MESSAGES: { [locale: string]: { [key: string]: string } } = {
     label_refTypeSelection: "当前选中内容",
     label_uiLanguages: "界面语言",
     label_chatLanguages: "对话语言",
-    button_summarize: "总结",
+    button_summarize: "总结资料",
     button_summarizePage: "总结页面",
     button_summarizeSelection: "总结选中内容",
     button_addPromptTemplate: "添加自定义提示",

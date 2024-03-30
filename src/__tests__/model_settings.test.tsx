@@ -31,7 +31,7 @@ describe("ModelSettings Component", () => {
     let setCustomProviders = jest.fn();
     render(
       <ModelSettings
-        language="en"
+        displayText={(text) => text}
         providerConfigs={providerConfigs}
         setProviderConfigs={setProviderConfigs}
         customModels={customModels}

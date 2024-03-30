@@ -2,7 +2,6 @@ import { DeleteOutlined, FileAddOutlined, FileTextOutlined } from "@ant-design/i
 import { Button, Collapse, Flex, Tag, Tooltip } from "antd";
 import markdownit from "markdown-it";
 import React from "react";
-import { getLocaleMessage } from "../utils/locale";
 import { Reference } from "../utils/message";
 import { getCurrentPageRef, getCurrentSelection } from "../utils/page_content";
 import { BlankDiv } from "./common";
@@ -25,11 +24,11 @@ export const addPageToReference = async (
 };
 
 export const ReferenceBox = ({
-  lang,
+  displayText,
   references,
   setReferences,
 }: {
-  lang: string;
+  displayText: (text: string) => string;
   references: Reference[];
   setReferences: (value: Reference[]) => void;
 }) => {
@@ -98,9 +97,9 @@ export const ReferenceBox = ({
       {references.length > 0 && displayReferences()}
       {references.length > 0 && <BlankDiv height={4} />}
       <Flex id="reference_actions" justify="space-between">
-        <Tag>{`${references.length} ${getLocaleMessage(lang, "tag_references")}`}</Tag>
+        <Tag>{`${references.length} ${displayText("label_references")}`}</Tag>
         <span>
-          <Tooltip title={getLocaleMessage(lang, "tooltip_addCurrentPage")}>
+          <Tooltip title={displayText("tooltip_addCurrentPage")}>
             <Button
               icon={<FileAddOutlined />}
               type="text"
@@ -109,7 +108,7 @@ export const ReferenceBox = ({
             />
           </Tooltip>
 
-          <Tooltip title={getLocaleMessage(lang, "tooltip_addSelection")}>
+          <Tooltip title={displayText("tooltip_addSelection")}>
             <Button
               icon={<FileTextOutlined />}
               type="text"
@@ -117,7 +116,7 @@ export const ReferenceBox = ({
               onClick={addSelectionToReference}
             />
           </Tooltip>
-          <Tooltip title={getLocaleMessage(lang, "tooltip_clearReferences")}>
+          <Tooltip title={displayText("tooltip_clearReferences")}>
             <Button
               icon={<DeleteOutlined />}
               type="text"

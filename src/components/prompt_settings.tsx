@@ -1,13 +1,15 @@
-import { MinusCircleOutlined, PlusCircleOutlined } from "@ant-design/icons";
+import { MinusCircleOutlined } from "@ant-design/icons";
 import { Button, Col, Flex, Input, Row, Select, Space } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import React from "react";
 import { ChatReferenceType, PromptTemplate } from "../utils/message";
 
 export const PromptSettings = ({
+  displayText,
   promptTemplates,
   setPromptTemplates,
 }: {
+  displayText: (text: string) => string;
   promptTemplates: PromptTemplate[];
   setPromptTemplates: (tasks: PromptTemplate[]) => void;
 }) => {
@@ -43,32 +45,21 @@ export const PromptSettings = ({
       setPromptTemplates(newTemplates);
     }
   };
-  const addTemplate = () => {
-    const value = new PromptTemplate("Prompt", "", "all");
+  const addPromptTemplate = () => {
+    const value = new PromptTemplate(displayText("input_defaultPromptName"), "", "all");
     setPromptTemplates([...promptTemplates, value]);
   };
 
   return (
     <>
-      <Row align="middle">
-        <Col span={16}>
-          <h2>Prompt Templates</h2>
-        </Col>
-        <Col span={6} offset={2}>
-          <Button icon={<PlusCircleOutlined />} type="text" size="middle" onClick={addTemplate}>
-            new
-          </Button>
-        </Col>
-      </Row>
-
       {promptTemplates.map((tpl) => (
         <>
-          <Row style={{ padding: "16px 0px 16px 0px" }}>
+          <Row style={{ padding: "16px 0px 16px 0px" }} key={tpl.id}>
             <Col span={21}>
               <Space direction="vertical" id={tpl.id} style={{ width: "100%" }}>
                 <Row key="name">
                   <Col span={8} style={{ lineHeight: "2" }}>
-                    Name
+                    {displayText("label_name")}
                   </Col>
                   <Col span={16}>
                     <Input
@@ -80,15 +71,15 @@ export const PromptSettings = ({
 
                 <Row key="ref_type">
                   <Col span={8} style={{ lineHeight: "2" }}>
-                    Reference
+                    {displayText("label_refType")}
                   </Col>
                   <Col span={16}>
                     <Select
                       style={{ width: "100%" }}
                       options={[
-                        { value: "all", label: "All References" },
-                        { value: "page", label: "Current Page" },
-                        { value: "selection", label: "Current Selection" },
+                        { value: "all", label: displayText("label_refTypeAll") },
+                        { value: "page", label: displayText("label_refTypePage") },
+                        { value: "selection", label: displayText("label_refTypeSelection") },
                       ]}
                       value={tpl.reference_type}
                       onChange={(val) => {
@@ -101,7 +92,7 @@ export const PromptSettings = ({
                   value={tpl.prompt}
                   onChange={(e) => updateTemplatePrompt(tpl.id, e.target.value)}
                   autoSize={{ maxRows: 4 }}
-                  placeholder="Enter prompt here..."
+                  placeholder={displayText("input_customPrompt")}
                 />
               </Space>
             </Col>
@@ -119,6 +110,10 @@ export const PromptSettings = ({
           </Row>
         </>
       ))}
+
+      <Row justify="center">
+        <Button onClick={addPromptTemplate}>{displayText("button_addPromptTemplate")}</Button>
+      </Row>
     </>
   );
 };

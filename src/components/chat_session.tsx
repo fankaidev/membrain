@@ -1,16 +1,16 @@
 import markdownit from "markdown-it";
 import React, { useEffect, useState } from "react";
 import { callClaude } from "../utils/anthropic_api";
-import { Language, Model, ModelProvider, ProviderConfig } from "../utils/config";
+import { Model, ModelProvider, ProviderConfig } from "../utils/config";
 import { callGemini } from "../utils/google_api";
-import { getLocaleMessage } from "../utils/locale";
 import { ChatTask, Message, Reference } from "../utils/message";
 import { callOpenAIApi } from "../utils/openai_api";
 import { getCurrentSelection } from "../utils/page_content";
 import { addPageToReference } from "./references";
 
 export const ChatSession = ({
-  lang,
+  displayText,
+  chatLanguage,
   modelName,
   allModels,
   allProviders,
@@ -24,7 +24,8 @@ export const ChatSession = ({
   setHistory,
   setChatStatus,
 }: {
-  lang: Language;
+  displayText: (text: string) => string;
+  chatLanguage: string;
   modelName: string;
   allModels: Model[];
   allProviders: ModelProvider[];
@@ -76,9 +77,10 @@ export const ChatSession = ({
   const initMessages = (content: string, context_references: Reference[]) => {
     const query = new Message("user", content);
     const reply = new Message("assistant", "", modelName);
-    let systemPrompt = `${getLocaleMessage(lang, "prompt_system")}\n`;
+    let systemPrompt = `You are a smart assistant, please try to answer user's questions as accurately as possible.
+    You should use following language to communicate with user: \`${chatLanguage}\` \n`;
     if (context_references.length > 0) {
-      systemPrompt += `${getLocaleMessage(lang, "prompt_useReferences")}\n`;
+      systemPrompt += `${displayText("prompt_useReferences")}\n`;
       for (const [index, ref] of context_references.entries()) {
         systemPrompt += `${index + 1}: type=${ref.type}`;
         if (ref.type === "webpage") {
@@ -141,7 +143,7 @@ export const ChatSession = ({
     if (chatTask.reference_type === "page") {
       addPageToReference(references, setReferences).then((pageRef) => {
         if (pageRef) {
-          const prompt = `${getLocaleMessage(lang, "prompt_pageReference")}\n\n\`\`\`${
+          const prompt = `${displayText("prompt_pageReference")}\n\n\`\`\`${
             pageRef.title
           }\`\`\`\n\n${chatTask.prompt}`;
           chatWithLLM(prompt, [pageRef]);
@@ -154,10 +156,8 @@ export const ChatSession = ({
       getCurrentSelection().then((selection) => {
         if (selection) {
           console.log("selection is", selection);
-          const prompt = `${getLocaleMessage(
-            lang,
-            "prompt_selectionReference"
-          )}\n\n\`\`\`${selection}\`\`\`\n\n${chatTask.prompt}`;
+          const prompt = `${displayText("prompt_selectionReference")}\n\n
+          \`\`\`${selection}\`\`\`\n\n${chatTask.prompt}`;
           chatWithLLM(prompt, references);
         } else {
           setChatStatus("fail to get selection of current page");

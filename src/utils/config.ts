@@ -1,7 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
 
-export type Language = "en" | "zh";
-
 export const WA_MENU_TASK_SUMMARIZE_PAGE = "summarize_page";
 export const WA_MENU_TASK_EXPLAIN_SELECTION = "explain_selection";
 

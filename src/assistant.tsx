@@ -14,10 +14,9 @@ import { BlankDiv } from "./components/common";
 import { ModelSettings } from "./components/model_settings";
 import { PromptSettings } from "./components/prompt_settings";
 import { ReferenceBox, addPageToReference } from "./components/references";
-import { Settings } from "./components/settings";
+import { GeneralSettings } from "./components/settings";
 import { useStorage } from "./hooks/useStorage";
 import {
-  Language,
   Model,
   ModelProvider,
   ProviderConfig,
@@ -31,13 +30,14 @@ import { getLocaleMessage } from "./utils/locale";
 import { ChatTask, Message, PromptTemplate, Reference } from "./utils/message";
 
 export const Assistant = () => {
-  const [lang, setLang] = useStorage<Language>("sync", "language", "en");
+  const [UILanguage, setUILanguage] = useStorage<string>("sync", "UILanguage", "en");
+  const [chatLanguage, setChatLanguage] = useStorage<string>("sync", "chatLanguage", "English");
   const [modelName, setModelName] = useStorage<string>("local", "modelName", "");
   const [history, setHistory] = useStorage<Message[]>("local", "chatHistory", []);
   const [references, setReferences] = useStorage<Reference[]>("local", "references", []);
   const [chatTask, setChatTask] = useState<ChatTask | null>(null);
   const [chatStatus, setChatStatus] = useState("");
-  const [openSettings, setOpenSettings] = useState(false);
+  const [openGeneralSettings, setOpenGeneralSettings] = useState(false);
   const [openPromptSettings, setOpenPromptSettings] = useState(false);
   const [openModelSettings, setOpenModelSettings] = useState(false);
   const [promptTemplates, setPromptTemplates] = useStorage<PromptTemplate[]>(
@@ -61,6 +61,10 @@ export const Assistant = () => {
   const allModels = [...SYSTEM_MODELS, ...customModels];
   const allProviders = [...SYSTEM_PROVIDERS, ...customProviders];
 
+  const displayText = (text: string) => {
+    return getLocaleMessage(UILanguage, text);
+  };
+
   // handle tasks from menu
   const checkNewTaskFromBackground = async () => {
     const { menuTask } = await chrome.storage.local.get("menuTask");
@@ -77,9 +81,9 @@ export const Assistant = () => {
     if (!pageRef) {
       console.error("fail to get current page");
     } else if (menuTask.name === WA_MENU_TASK_SUMMARIZE_PAGE) {
-      setChatTask(new ChatTask(getLocaleMessage(lang, "prompt_summarizePage"), "page"));
+      setChatTask(new ChatTask(displayText("prompt_summarizePage"), "page"));
     } else if (menuTask.name === WA_MENU_TASK_EXPLAIN_SELECTION) {
-      setChatTask(new ChatTask(getLocaleMessage(lang, "prompt_summarizeSelection"), "selection"));
+      setChatTask(new ChatTask(displayText("prompt_summarizeSelection"), "selection"));
     } else {
       console.error("unknown menu task:", menuTask);
     }
@@ -139,29 +143,39 @@ export const Assistant = () => {
   return (
     <>
       <Drawer
-        title="General Settings"
-        onClose={() => setOpenSettings(false)}
-        open={openSettings}
+        title={displayText("tooltip_generalSettings")}
+        onClose={() => setOpenGeneralSettings(false)}
+        open={openGeneralSettings}
         keyboard={false}
       >
-        <Settings language={lang} setLanguage={setLang} />
+        <GeneralSettings
+          displayText={displayText}
+          UILanguage={UILanguage}
+          setUILanguage={setUILanguage}
+          chatLanguage={chatLanguage}
+          setChatLanguage={setChatLanguage}
+        />
       </Drawer>
       <Drawer
-        title="Prompt Settings"
+        title={displayText("tooltip_promptSettings")}
         onClose={() => setOpenPromptSettings(false)}
         open={openPromptSettings}
         keyboard={false}
       >
-        <PromptSettings promptTemplates={promptTemplates} setPromptTemplates={setPromptTemplates} />
+        <PromptSettings
+          displayText={displayText}
+          promptTemplates={promptTemplates}
+          setPromptTemplates={setPromptTemplates}
+        />
       </Drawer>
       <Drawer
-        title="Model Settings"
+        title={displayText("tooltip_modelSettings")}
         onClose={() => setOpenModelSettings(false)}
         open={openModelSettings}
         keyboard={false}
       >
         <ModelSettings
-          language={lang}
+          displayText={displayText}
           providerConfigs={providerConfigs}
           setProviderConfigs={setProviderConfigs}
           customModels={customModels}
@@ -179,7 +193,7 @@ export const Assistant = () => {
         }}
       >
         <Row>
-          <Tooltip title="clear all">
+          <Tooltip title={displayText("tooltip_clearAll")}>
             <Button
               icon={<PoweroffOutlined />}
               type="text"
@@ -188,15 +202,15 @@ export const Assistant = () => {
               onClick={clearAll}
             />
           </Tooltip>
-          <Tooltip title="general settings">
+          <Tooltip title={displayText("tooltip_generalSettings")}>
             <Button
               icon={<SettingOutlined />}
               type="text"
               size="middle"
-              onClick={() => setOpenSettings(true)}
+              onClick={() => setOpenGeneralSettings(true)}
             />
           </Tooltip>
-          <Tooltip title="prompt settings">
+          <Tooltip title={displayText("tooltip_promptSettings")}>
             <Button
               icon={<FormOutlined />}
               type="text"
@@ -204,7 +218,7 @@ export const Assistant = () => {
               onClick={() => setOpenPromptSettings(true)}
             />
           </Tooltip>
-          <Tooltip title="model settings">
+          <Tooltip title={displayText("tooltip_modelSettings")}>
             <Button
               icon={<DeploymentUnitOutlined />}
               type="text"
@@ -215,7 +229,11 @@ export const Assistant = () => {
         </Row>
 
         <div id="references" style={{ padding: "8px 0px 8px 0px" }}>
-          <ReferenceBox references={references} setReferences={setReferences} lang={lang} />
+          <ReferenceBox
+            references={references}
+            setReferences={setReferences}
+            displayText={displayText}
+          />
         </div>
 
         <div
@@ -231,7 +249,8 @@ export const Assistant = () => {
           }}
         >
           <ChatSession
-            lang={lang}
+            displayText={displayText}
+            chatLanguage={chatLanguage}
             modelName={modelName}
             providerConfigs={providerConfigs}
             references={references}
@@ -246,7 +265,7 @@ export const Assistant = () => {
             allProviders={allProviders}
           />
           <ChatActions
-            lang={lang}
+            displayText={displayText}
             promptTemplates={promptTemplates}
             setChatTask={setChatTask}
             chatStatus={chatStatus}
@@ -273,13 +292,13 @@ export const Assistant = () => {
                 onClick={() => setOpenModelSettings(true)}
                 danger
               >
-                API keys are required
+                {displayText("tip_setUpModels")}
               </Button>
             </Row>
           )}
           <BlankDiv height={4} />
           <ChatInput
-            lang={lang}
+            displayText={displayText}
             enabled={chatTask === null && enabledModels.length > 0}
             setChatTask={setChatTask}
             clearChatSession={clearChatSession}
@@ -289,10 +308,6 @@ export const Assistant = () => {
       </Flex>
     </>
   );
-};
-
-export const TestA = () => {
-  return <div> abc</div>;
 };
 
 const root = createRoot(document.getElementById("root")!);

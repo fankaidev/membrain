@@ -1,34 +1,54 @@
-import { Row, Select } from "antd";
+import { Col, Row, Select, Space, message } from "antd";
 import React from "react";
-import { Language } from "../utils/config";
+import { CHAT_LANGUAGES, UI_LANGUAGES } from "../utils/locale";
 
-export const Settings = ({
-  language,
-  setLanguage,
+export const GeneralSettings = ({
+  displayText,
+  UILanguage,
+  setUILanguage,
+  chatLanguage,
+  setChatLanguage,
 }: {
-  language: Language;
-  setLanguage: (value: Language) => void;
+  displayText: (text: string) => string;
+  UILanguage: string;
+  setUILanguage: (value: string) => void;
+  chatLanguage: string;
+  setChatLanguage: (value: string) => void;
 }) => {
-  const changeLanguage = (value: string) => {
-    setLanguage(value as Language);
+  const changeUILanguage = (value: string) => {
+    setUILanguage(value);
+    message.success(`Language changed to ${value}`, 1);
+  };
+
+  const changeChatLanguage = (value: string) => {
+    setChatLanguage(value);
+    message.success(`Chat Language changed to ${value}`, 1);
   };
 
   return (
-    <>
-      <Row justify={"center"} key="lang-header">
-        <h3>Language</h3>
+    <Space direction="vertical" style={{ width: "100%" }}>
+      <Row align={"middle"}>
+        <Col span={12}>{displayText("label_uiLanguages")}</Col>
+        <Col span={12}>
+          <Select
+            value={UILanguage}
+            onChange={changeUILanguage}
+            style={{ width: "100%" }}
+            options={UI_LANGUAGES}
+          />
+        </Col>
       </Row>
-      <Row justify={"center"} key="lang">
-        <Select
-          value={language}
-          onChange={changeLanguage}
-          style={{ width: 120 }}
-          options={[
-            { value: "en", label: "English" },
-            { value: "zh", label: "Chinese" },
-          ]}
-        />
+      <Row align={"middle"}>
+        <Col span={12}>{displayText("label_chatLanguages")}</Col>
+        <Col span={12}>
+          <Select
+            value={chatLanguage}
+            onChange={changeChatLanguage}
+            style={{ width: "100%" }}
+            options={CHAT_LANGUAGES}
+          />
+        </Col>
       </Row>
-    </>
+    </Space>
   );
 };

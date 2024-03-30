@@ -1,3 +1,18 @@
+# 0.4.0 (2024-03-30)
+
+### Bug Fixes
+
+- anthropic system message settings ([d981da9](https://github.com/fankaidev/membrain/commit/d981da9251679d0ba463c89cede938837821558e))
+- fix antd warning of Collapse ([1b1d542](https://github.com/fankaidev/membrain/commit/1b1d54213b28fbf313a6c4b4c1112cdc49e4d697))
+- need host_permissions to get page content ([f76c6c1](https://github.com/fankaidev/membrain/commit/f76c6c1249779f9982247fbf4cae866d71acc4aa))
+
+### Features
+
+- add chat language setting and more locale messages ([fa433de](https://github.com/fankaidev/membrain/commit/fa433decd5ede55191738955602e4e0e664aa064))
+- display link in references ([8216486](https://github.com/fankaidev/membrain/commit/8216486de1da80f78a1d13cf882c6f025219fb08))
+- make each chat message collapsable ([8c49186](https://github.com/fankaidev/membrain/commit/8c491865af857ce70c1bfe497ea29b9a129caf22))
+- rename project to MemBrain ([5c44540](https://github.com/fankaidev/membrain/commit/5c44540bbfc556fdef539ccae3992bca74b89678))
+
 # 0.3.0 (2024-03-29)
 
 ### Bug Fixes

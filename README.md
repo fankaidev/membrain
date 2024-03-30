@@ -1,6 +1,6 @@
-# Web Assistant - second brain in your browser
+# MemBrain - AI-powered Second Brain
 
-**Web Assistant** is an open-source browser extension that provides easier access to AI models directly within your browser.
+**MemBrain** is an open-source browser extension that provides easier access to AI models directly within your browser.
 
 ## Key Features
 

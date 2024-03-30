@@ -1,4 +1,4 @@
-import { ClearOutlined, SendOutlined } from "@ant-design/icons";
+import { SendOutlined } from "@ant-design/icons";
 import { Button, Flex, Input, Tooltip } from "antd";
 import React, { ChangeEvent, useState } from "react";
 import { ChatTask } from "../utils/message";
@@ -7,12 +7,10 @@ export const ChatInput = ({
   displayText,
   enabled,
   setChatTask,
-  clearChatSession,
 }: {
   displayText: (text: string) => string;
   enabled: boolean;
   setChatTask: (task: ChatTask | null) => void;
-  clearChatSession: () => void;
 }) => {
   const [userInput, setUserInput] = useState("");
 
@@ -46,18 +44,8 @@ export const ChatInput = ({
           autoSize
           allowClear
         />
-
         <Tooltip title={displayText("tooltip_sendMessage")}>
           <Button icon={<SendOutlined />} type="text" size="middle" onClick={chat} />
-        </Tooltip>
-        <Tooltip title={displayText("tooltip_clearChats")}>
-          <Button
-            icon={<ClearOutlined />}
-            type="text"
-            size="middle"
-            danger
-            onClick={clearChatSession}
-          />
         </Tooltip>
       </Flex>
     </>

@@ -1,10 +1,10 @@
 import {
+  ClearOutlined,
   DeploymentUnitOutlined,
-  FormOutlined,
-  PoweroffOutlined,
+  MessageOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import { Button, Drawer, Flex, Row, Select, Tooltip } from "antd";
+import { Button, Col, Drawer, Flex, Row, Select, Tooltip } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ChatActions } from "./components/chat_actions";
@@ -108,14 +108,10 @@ export const Assistant = () => {
     }
   }, [history]);
 
-  const clearChatSession = () => {
+  const clearAll = () => {
     setHistory([]);
     setChatStatus("");
     setChatTask(null);
-  };
-
-  const clearAll = () => {
-    clearChatSession();
     setReferences([]);
   };
 
@@ -192,39 +188,43 @@ export const Assistant = () => {
         }}
       >
         <Row>
-          <Tooltip title={displayText("tooltip_clearAll")}>
-            <Button
-              icon={<PoweroffOutlined />}
-              type="text"
-              size="middle"
-              danger
-              onClick={clearAll}
-            />
-          </Tooltip>
-          <Tooltip title={displayText("tooltip_generalSettings")}>
-            <Button
-              icon={<SettingOutlined />}
-              type="text"
-              size="middle"
-              onClick={() => setOpenGeneralSettings(true)}
-            />
-          </Tooltip>
-          <Tooltip title={displayText("tooltip_promptSettings")}>
-            <Button
-              icon={<FormOutlined />}
-              type="text"
-              size="middle"
-              onClick={() => setOpenPromptSettings(true)}
-            />
-          </Tooltip>
-          <Tooltip title={displayText("tooltip_modelSettings")}>
-            <Button
-              icon={<DeploymentUnitOutlined />}
-              type="text"
-              size="middle"
-              onClick={() => setOpenModelSettings(true)}
-            />
-          </Tooltip>
+          <Col span={22}>
+            <Tooltip title={displayText("tooltip_generalSettings")}>
+              <Button
+                icon={<SettingOutlined />}
+                type="text"
+                size="middle"
+                onClick={() => setOpenGeneralSettings(true)}
+              />
+            </Tooltip>
+            <Tooltip title={displayText("tooltip_promptSettings")}>
+              <Button
+                icon={<MessageOutlined />}
+                type="text"
+                size="middle"
+                onClick={() => setOpenPromptSettings(true)}
+              />
+            </Tooltip>
+            <Tooltip title={displayText("tooltip_modelSettings")}>
+              <Button
+                icon={<DeploymentUnitOutlined />}
+                type="text"
+                size="middle"
+                onClick={() => setOpenModelSettings(true)}
+              />
+            </Tooltip>
+          </Col>
+          <Col span={2}>
+            <Tooltip title={displayText("tooltip_clearAll")}>
+              <Button
+                icon={<ClearOutlined />}
+                type="text"
+                size="middle"
+                danger
+                onClick={clearAll}
+              />
+            </Tooltip>
+          </Col>
         </Row>
 
         <div id="references" style={{ padding: "8px 0px 8px 0px" }}>
@@ -299,7 +299,6 @@ export const Assistant = () => {
             displayText={displayText}
             enabled={chatTask === null && enabledModels.length > 0}
             setChatTask={setChatTask}
-            clearChatSession={clearChatSession}
           />
           <BlankDiv height={8} />
         </div>

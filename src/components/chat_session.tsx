@@ -1,3 +1,10 @@
+import {
+  DownCircleOutlined,
+  RobotOutlined,
+  UpCircleOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
+import { Col, Row } from "antd";
 import markdownit from "markdown-it";
 import React, { useEffect, useState } from "react";
 import { callClaude } from "../utils/anthropic_api";
@@ -6,6 +13,7 @@ import { callGemini } from "../utils/google_api";
 import { ChatTask, Message, Reference } from "../utils/message";
 import { callOpenAIApi } from "../utils/openai_api";
 import { getCurrentSelection } from "../utils/page_content";
+import { BlankDiv } from "./common";
 import { addPageToReference } from "./references";
 
 export const ChatSession = ({
@@ -39,6 +47,7 @@ export const ChatSession = ({
 }) => {
   const [currentAnswer, setCurrentAnswer] = useState("");
   const [round, setRound] = useState(0);
+  const [collpasedIndexes, setCollapsedIndexes] = useState(new Set());
 
   const md = markdownit();
 
@@ -57,6 +66,12 @@ export const ChatSession = ({
       }
     }
   }, [currentAnswer, round]);
+
+  useEffect(() => {
+    if (history.length === 0) {
+      setCollapsedIndexes(new Set());
+    }
+  }, [history]);
 
   const onResponseContent = (content: string) => {
     console.debug("on response content");
@@ -163,17 +178,40 @@ export const ChatSession = ({
     }
   }, [chatTask]);
 
+  const toggleDisplay = (index: number) => {
+    const newSet = new Set(collpasedIndexes);
+    if (newSet.has(index)) {
+      newSet.delete(index);
+    } else {
+      newSet.add(index);
+    }
+    setCollapsedIndexes(newSet);
+  };
+
   return (
     <>
       {history.map((item, index) => {
         const html = md.render(item.content);
         return (
-          <div key={"history" + index}>
-            <div style={{ fontSize: "1.2em" }}>
-              {item.model ? "🤖" : "🙋"}
-              <b>{item.model ? ` ${item.role}(${item.model})` : ` ${item.role}`}</b>
-            </div>
-            <div dangerouslySetInnerHTML={{ __html: html }} />
+          <div key={"history" + index} style={{ margin: "2px" }}>
+            <Row align={"middle"} onClick={() => toggleDisplay(index)}>
+              <Col span={22}>
+                {item.model ? (
+                  <RobotOutlined style={{ color: "MediumSeaGreen", fontSize: "1.1em" }} />
+                ) : (
+                  <UserOutlined style={{ color: "Orange", fontSize: "1.1em" }} />
+                )}
+                <b>{item.model ? ` ${item.model}` : ` ${item.role}`}</b>
+              </Col>
+              <Col span={1} offset={1}>
+                {collpasedIndexes.has(index) ? <DownCircleOutlined /> : <UpCircleOutlined />}
+              </Col>
+            </Row>
+            {collpasedIndexes.has(index) ? (
+              <BlankDiv />
+            ) : (
+              <div dangerouslySetInnerHTML={{ __html: html }} />
+            )}
           </div>
         );
       })}

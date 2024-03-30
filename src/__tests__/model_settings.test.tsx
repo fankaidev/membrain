@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import React from "react";
 import { ModelSettings } from "../components/model_settings";
 import { Model, ModelProvider, ProviderConfig } from "../utils/config";
+import { getLocaleMessage } from "../utils/locale";
 
 describe("ModelSettings Component", () => {
   beforeAll(() => {
@@ -31,7 +32,7 @@ describe("ModelSettings Component", () => {
     let setCustomProviders = jest.fn();
     render(
       <ModelSettings
-        displayText={(text) => text}
+        displayText={(text) => getLocaleMessage("en", text)}
         providerConfigs={providerConfigs}
         setProviderConfigs={setProviderConfigs}
         customModels={customModels}

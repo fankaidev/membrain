@@ -1,6 +1,6 @@
 # Privacy Disclaimer
 
-**Web Assistant** is an open-source browser extension that provides easier access to AI models directly within your browser. It is designed to work without collecting any personal data from its users.
+**MemBrain** is an open-source browser extension that provides easier access to AI models directly within your browser. It is designed to work without collecting any personal data from its users.
 
 ## We Do Not Collect Any Information
 
@@ -12,12 +12,11 @@ The extension does not collect, store, or share any personal information, browsi
 
 As the Extension does not collect any user data, there is no personal information usage. The Extension functions on a real-time basis, processing data solely during the user's interaction with the AI model.
 
-
 ## Data Security
 
 We implement safeguards to ensure that any data processed during your interaction with the AI model remains secure and inaccessible to unauthorized parties. However, as no data is collected or stored, the risk of a data breach is minimal.
 
-This project is fully open-source and available on [github](https://github.com/fankaidev/web-assistant).
+This project is fully open-source and available on [github](https://github.com/fankaidev/membrain).
 
 ## Changes to This Privacy Disclaimer
 
@@ -29,5 +28,4 @@ By using this Extension, you are consenting to this Privacy Disclaimer and agree
 
 ## Contact Us
 
-If you have any questions about this Privacy Disclaimer, please create a [issue](https://github.com/fankaidev/web-assistant/issues) in our project.
-
+If you have any questions about this Privacy Disclaimer, please create a [issue](https://github.com/fankaidev/membrain/issues) in our project.

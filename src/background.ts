@@ -2,16 +2,16 @@ import {
   WA_MENU_EXPLAIN_SELECTION,
   WA_MENU_OPEN,
   WA_MENU_SUMMARIZE_PAGE,
-  WA_MESSAGE_TYPE_MENU_TASK,
-  WA_MESSAGE_TYPE_OPEN,
   WA_MENU_TASK_EXPLAIN_SELECTION,
   WA_MENU_TASK_SUMMARIZE_PAGE,
+  WA_MESSAGE_TYPE_MENU_TASK,
+  WA_MESSAGE_TYPE_OPEN,
 } from "./utils/config";
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: WA_MENU_OPEN,
-    title: "Open Web Assistant",
+    title: "Open MemBrain",
     contexts: ["all"],
   });
   chrome.contextMenus.create({

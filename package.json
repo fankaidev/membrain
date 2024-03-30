@@ -1,7 +1,7 @@
 {
-  "name": "web-assistant",
-  "version": "0.3.0",
-  "description": "Web Assistant - second brain in your browser",
+  "name": "membrain",
+  "version": "0.4.0",
+  "description": "MemBrain - AI-powered Second Brain",
   "scripts": {
     "watch": "webpack --config webpack/webpack.dev.js --watch",
     "build": "webpack --config webpack/webpack.prod.js",
@@ -9,9 +9,10 @@
     "test:dev": "jest --watch",
     "test:coverage": "jest --coverage",
     "style": "prettier --write \"src/**/*.{ts,tsx}\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md"
   },
-  "homepage": "https://github.com/fankaidev/web-assistant",
+  "homepage": "https://github.com/fankaidev/membrain",
   "author": "fankai <fankaidev@gmail.com>",
   "license": "MIT",
   "dependencies": {

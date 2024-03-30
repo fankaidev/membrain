@@ -145,7 +145,12 @@ export const ModelSettings = ({
     };
 
     return (
-      <Row key={provider.id} style={{ width: "100%" }} align={"middle"}>
+      <Row
+        key={provider.id}
+        data-testid={`providerHeader`}
+        style={{ width: "100%" }}
+        align={"middle"}
+      >
         <Col span={16} style={{ lineHeight: "2" }}>
           <b>{provider.name}</b>
         </Col>
@@ -180,7 +185,7 @@ export const ModelSettings = ({
     };
 
     return (
-      <Row key={model.id} style={{ width: "100%" }}>
+      <Row key={model.id} style={{ width: "100%" }} data-testid={`model_${model.name}`}>
         <Col span={20} style={{ lineHeight: "2" }}>
           {model.name}
         </Col>
@@ -206,7 +211,8 @@ export const ModelSettings = ({
     return (
       <Modal
         open={openModelModal}
-        title="Model Configuration"
+        title="Model"
+        data-testid="model_modal"
         footer={[
           <Button key="cancel" onClick={() => setOpenModelModal(false)}>
             Cancel
@@ -243,7 +249,8 @@ export const ModelSettings = ({
         open={openProviderModal}
         onOk={upsertProvider}
         onCancel={() => setOpenProviderModal(false)}
-        title="Provider Configuration"
+        title="Provider"
+        data-testid="providerModal"
         footer={[
           <Button key="cancel" onClick={() => setOpenProviderModal(false)}>
             Cancel
@@ -286,7 +293,7 @@ export const ModelSettings = ({
     const config = providerConfigs[provider.id] || new ProviderConfig(provider.id, false, "", []);
     const providerModels = allModels.filter((model) => model.providerId === provider.id);
     return (
-      <div key={provider.id}>
+      <div key={provider.id} data-testid={`provider_${provider.name}`}>
         {displayProviderRow(provider, config)}
         {config.enabled && (
           <>

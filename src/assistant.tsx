@@ -30,7 +30,7 @@ import {
 import { getLocaleMessage } from "./utils/locale";
 import { ChatTask, Message, PromptTemplate, Reference } from "./utils/message";
 
-const Assistant = () => {
+export const Assistant = () => {
   const [lang, setLang] = useStorage<Language>("sync", "language", "en");
   const [modelName, setModelName] = useStorage<string>("local", "modelName", "");
   const [history, setHistory] = useStorage<Message[]>("local", "chatHistory", []);
@@ -289,6 +289,10 @@ const Assistant = () => {
       </Flex>
     </>
   );
+};
+
+export const TestA = () => {
+  return <div> abc</div>;
 };
 
 const root = createRoot(document.getElementById("root")!);

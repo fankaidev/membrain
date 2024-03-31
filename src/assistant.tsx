@@ -4,7 +4,7 @@ import {
   MessageOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import { Button, Col, Drawer, Flex, Row, Select, Space } from "antd";
+import { Col, Drawer, Flex, Row } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ChatActions } from "./components/chat_actions";
@@ -20,6 +20,7 @@ import { GeneralSettings } from "./components/settings";
 import { useLocalStorage, useSyncStorage } from "./hooks/useStorage";
 import {
   Model,
+  ModelAndProvider,
   ModelProvider,
   ProviderConfig,
   SYSTEM_MODELS,
@@ -40,7 +41,7 @@ import {
 export const Assistant = () => {
   const [UILanguage, setUILanguage] = useSyncStorage<string>("UILanguage", "en");
   const [chatLanguage, setChatLanguage] = useSyncStorage<string>("chatLanguage", "English");
-  const [modelName, setModelName] = useLocalStorage<string>("modelName", "");
+  const [currentModel, setCurrentModel] = useState<ModelAndProvider | null>(null);
   const [history, setHistory] = useLocalStorage<Message[]>("chatHistory", []);
   const [references, setReferences] = useLocalStorage<Reference[]>("references", []);
   const [chatTask, setChatTask] = useState<ChatTask | null>(null);
@@ -116,56 +117,6 @@ export const Assistant = () => {
     setHistory([]);
     setChatStatus("");
     setReferences([]);
-  };
-
-  const enabledModels: [Model, ModelProvider][] = allProviders
-    .map((p) => [p, providerConfigs[p.id]] as [ModelProvider, ProviderConfig])
-    .filter(([p, c]) => c && c.enabled)
-    .flatMap(([p, c]) =>
-      allModels
-        .filter((m) => m.providerId === p.id && c.enabledModels.includes(m.name))
-        .map((m) => [m, p] as [Model, ModelProvider])
-    );
-
-  useEffect(() => {
-    if (!enabledModels.map(([m, p]) => m.name).includes(modelName)) {
-      if (enabledModels.length > 0) {
-        setModelName(enabledModels[0][0].name);
-      } else {
-        setModelName("");
-      }
-    }
-    console.debug("enabled models=", enabledModels);
-  }, [providerConfigs, enabledModels]);
-
-  const selectModel = () => {
-    return (
-      <>
-        {enabledModels.length > 0 && (
-          <Select
-            onChange={setModelName}
-            value={modelName}
-            style={{ width: "100%" }}
-            placeholder="Select Model"
-            options={enabledModels.map((m) => ({ value: m[0].name }))}
-            showSearch
-          />
-        )}
-        {enabledModels.length === 0 && (
-          <Row>
-            <Button
-              icon={<DeploymentUnitOutlined />}
-              type="text"
-              size="middle"
-              onClick={() => setOpenModelSettings(true)}
-              danger
-            >
-              {displayText(TXT.TIP_SET_UP_MODELS)}
-            </Button>
-          </Row>
-        )}
-      </>
-    );
   };
 
   const settings = () => {
@@ -267,8 +218,7 @@ export const Assistant = () => {
         >
           <ChatSession
             chatLanguage={chatLanguage}
-            modelName={modelName}
-            enabledModels={enabledModels}
+            currentModel={currentModel}
             providerConfigs={providerConfigs}
             references={references}
             setReferences={setReferences}
@@ -278,10 +228,17 @@ export const Assistant = () => {
           <ChatActions promptTemplates={promptTemplates} />
         </div>
 
-        <Space direction="vertical" style={{ padding: "8px 4px 4px 4px" }}>
-          {selectModel()}
-          <ChatInput enabled={chatStatus !== CHAT_STATUS_PROCESSING && enabledModels.length > 0} />
-        </Space>
+        <div id="chat_input" style={{ padding: "4px 0px 4px 0px" }}>
+          <ChatInput
+            enabled={chatStatus !== CHAT_STATUS_PROCESSING && currentModel !== null}
+            allModels={allModels}
+            allProviders={allProviders}
+            providerConfigs={providerConfigs}
+            currentModel={currentModel}
+            setCurrentModel={setCurrentModel}
+            setOpenModelSettings={setOpenModelSettings}
+          />
+        </div>
       </Flex>
     </>
   );

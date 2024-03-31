@@ -16,7 +16,6 @@ import { CHAT_STATUS_PROCESSING, Message, Reference } from "../utils/message";
 import { callOpenAIApi } from "../utils/openai_api";
 import { getCurrentSelection } from "../utils/page_content";
 import { ChatContext } from "./chat_context";
-import { BlankDiv } from "./common";
 import { LocaleContext } from "./locale_context";
 import { addPageToReference } from "./references";
 
@@ -200,8 +199,8 @@ export const ChatSession = ({
       {history.map((item, index) => {
         const html = md.render(item.content);
         return (
-          <div key={"history" + index} style={{ margin: "2px" }}>
-            <Row align={"middle"}>
+          <div key={"history" + index} style={{ marginLeft: "2px", marginRight: "2px" }}>
+            <Row align={"middle"} style={{ backgroundColor: "WhiteSmoke" }}>
               <Col span={20}>
                 {item.model ? (
                   <RobotOutlined style={{ color: "MediumSeaGreen" }} />
@@ -223,10 +222,14 @@ export const ChatSession = ({
                 />
               </Col>
             </Row>
-            {collpasedIndexes.has(index) ? (
-              <BlankDiv />
-            ) : (
-              <div dangerouslySetInnerHTML={{ __html: html }} />
+            {!collpasedIndexes.has(index) && (
+              <div
+                dangerouslySetInnerHTML={{ __html: html }}
+                style={{
+                  marginTop: "-8px",
+                  marginBottom: "-8px",
+                }}
+              />
             )}
           </div>
         );

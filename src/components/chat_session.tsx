@@ -1,16 +1,17 @@
 import {
   DownCircleOutlined,
+  ReloadOutlined,
   RobotOutlined,
   UpCircleOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { Col, Row } from "antd";
+import { Button, Col, Row } from "antd";
 import markdownit from "markdown-it";
 import React, { useEffect, useState } from "react";
 import { callClaude } from "../utils/anthropic_api";
 import { Model, ModelProvider, ProviderConfig } from "../utils/config";
 import { callGemini } from "../utils/google_api";
-import { ChatTask, Message, Reference } from "../utils/message";
+import { CHAT_STATUS_PROCESSING, ChatTask, Message, Reference } from "../utils/message";
 import { callOpenAIApi } from "../utils/openai_api";
 import { getCurrentSelection } from "../utils/page_content";
 import { BlankDiv } from "./common";
@@ -47,7 +48,7 @@ export const ChatSession = ({
 }) => {
   const [currentAnswer, setCurrentAnswer] = useState("");
   const [round, setRound] = useState(0);
-  const [collpasedIndexes, setCollapsedIndexes] = useState(new Set());
+  const [collpasedIndexes, setCollapsedIndexes] = useState<Set<number>>(new Set());
 
   const md = markdownit();
 
@@ -84,7 +85,6 @@ export const ChatSession = ({
       setCurrentAnswer((answer) => answer + ` [ERROR]:${errorMsg}`);
     }
     setChatStatus("");
-    setChatTask(null);
   };
 
   const initMessages = (content: string, context_references: Reference[]) => {
@@ -108,7 +108,7 @@ export const ChatSession = ({
     return messages;
   };
 
-  const chatWithLLM = async (content: string, context_references: Reference[]) => {
+  const chatWithAI = async (messages: Message[]) => {
     const modelAndProvider = enabledModels.find((m) => m[0].name === modelName);
     if (!modelAndProvider) {
       setChatStatus(`model ${modelName} not found`);
@@ -121,10 +121,9 @@ export const ChatSession = ({
       return;
     }
 
-    const messages = initMessages(content, context_references);
     setCurrentAnswer("");
     setRound((round) => round + 1);
-    setChatStatus("processing");
+    setChatStatus(CHAT_STATUS_PROCESSING);
 
     if (provider.apiType === "Google") {
       callGemini(apiKey, model, messages, onResponseContent, onResponseFinish);
@@ -135,17 +134,22 @@ export const ChatSession = ({
     }
   };
 
+  const startChat = async (content: string, context_references: Reference[]) => {
+    const messages = initMessages(content, context_references);
+    chatWithAI(messages);
+  };
+
   // handle chat task change
   useEffect(() => {
     if (!chatTask) {
       return;
     }
-    if (chatStatus === "processing") {
+    setChatTask(null); // don't affect current value of chatTask
+    if (chatStatus === CHAT_STATUS_PROCESSING) {
       return;
     }
     if (!chatTask.prompt) {
       setChatStatus("empty prompt");
-      setChatTask(null);
       return;
     }
     console.log("chat task=", chatTask);
@@ -155,10 +159,9 @@ export const ChatSession = ({
           const prompt = `${displayText("prompt_pageReference")}\n\n\`\`\`${
             pageRef.title
           }\`\`\`\n\n${chatTask.prompt}`;
-          chatWithLLM(prompt, [pageRef]);
+          startChat(prompt, [pageRef]);
         } else {
           setChatStatus("fail to get content of current page");
-          setChatTask(null);
         }
       });
     } else if (chatTask.reference_type === "selection") {
@@ -167,14 +170,13 @@ export const ChatSession = ({
           console.log("selection is", selection);
           const prompt = `${displayText("prompt_selectionReference")}\n\n
           \`\`\`${selection}\`\`\`\n\n${chatTask.prompt}`;
-          chatWithLLM(prompt, references);
+          startChat(prompt, references);
         } else {
           setChatStatus("fail to get selection of current page");
-          setChatTask(null);
         }
       });
     } else {
-      chatWithLLM(chatTask.prompt, references);
+      startChat(chatTask.prompt, references);
     }
   }, [chatTask]);
 
@@ -188,23 +190,42 @@ export const ChatSession = ({
     setCollapsedIndexes(newSet);
   };
 
+  const redoChat = (index: number) => {
+    if (chatStatus !== CHAT_STATUS_PROCESSING) {
+      const reply = new Message("assistant", "", modelName);
+      const messages = [...history.slice(0, index + 1), reply];
+      setHistory(messages);
+      setCollapsedIndexes(new Set([...collpasedIndexes].filter((i) => i <= index)));
+      chatWithAI(messages);
+    }
+  };
+
   return (
     <>
       {history.map((item, index) => {
         const html = md.render(item.content);
         return (
           <div key={"history" + index} style={{ margin: "2px" }}>
-            <Row align={"middle"} onClick={() => toggleDisplay(index)}>
-              <Col span={22}>
+            <Row align={"middle"}>
+              <Col span={20}>
                 {item.model ? (
-                  <RobotOutlined style={{ color: "MediumSeaGreen", fontSize: "1.1em" }} />
+                  <RobotOutlined style={{ color: "MediumSeaGreen" }} />
                 ) : (
-                  <UserOutlined style={{ color: "Orange", fontSize: "1.1em" }} />
+                  <UserOutlined style={{ color: "Orange" }} />
                 )}
                 <b>{item.model ? ` ${item.model}` : ` ${item.role}`}</b>
               </Col>
-              <Col span={1} offset={1}>
-                {collpasedIndexes.has(index) ? <DownCircleOutlined /> : <UpCircleOutlined />}
+              <Col span={2}>
+                {item.role === "user" && chatStatus !== CHAT_STATUS_PROCESSING && (
+                  <Button icon={<ReloadOutlined />} type="text" onClick={() => redoChat(index)} />
+                )}
+              </Col>
+              <Col span={2}>
+                <Button
+                  icon={collpasedIndexes.has(index) ? <DownCircleOutlined /> : <UpCircleOutlined />}
+                  onClick={() => toggleDisplay(index)}
+                  type="text"
+                />
               </Col>
             </Row>
             {collpasedIndexes.has(index) ? (

@@ -59,3 +59,5 @@ export class PromptTemplate {
     this.reference_type = reference_type;
   }
 }
+
+export const CHAT_STATUS_PROCESSING = "processing";

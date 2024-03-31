@@ -27,7 +27,13 @@ import {
   WA_MESSAGE_TYPE_MENU_TASK,
 } from "./utils/config";
 import { getLocaleMessage } from "./utils/locale";
-import { ChatTask, Message, PromptTemplate, Reference } from "./utils/message";
+import {
+  CHAT_STATUS_PROCESSING,
+  ChatTask,
+  Message,
+  PromptTemplate,
+  Reference,
+} from "./utils/message";
 
 export const Assistant = () => {
   const [UILanguage, setUILanguage] = useStorage<string>("sync", "UILanguage", "en");
@@ -111,7 +117,6 @@ export const Assistant = () => {
   const clearAll = () => {
     setHistory([]);
     setChatStatus("");
-    setChatTask(null);
     setReferences([]);
   };
 
@@ -297,7 +302,7 @@ export const Assistant = () => {
           <BlankDiv height={4} />
           <ChatInput
             displayText={displayText}
-            enabled={chatTask === null && enabledModels.length > 0}
+            enabled={chatStatus !== CHAT_STATUS_PROCESSING && enabledModels.length > 0}
             setChatTask={setChatTask}
           />
           <BlankDiv height={8} />

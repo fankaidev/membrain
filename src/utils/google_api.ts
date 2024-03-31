@@ -1,6 +1,6 @@
 import { Content, GoogleGenerativeAI } from "@google/generative-ai";
+import { Model } from "./config";
 import { Message } from "./message";
-import { Model, ModelProvider } from "./config";
 
 function prepareHistory(messages: Message[]) {
   const history: Content[] = [];
@@ -30,10 +30,11 @@ export const callGemini = async (
       messages = [first, ...messages.slice(2)];
     }
     const history = prepareHistory(messages);
+    // TODO: calculate remaining max output tokens
     const chat = genModel.startChat({
       history,
       generationConfig: {
-        maxOutputTokens: 2048,
+        maxOutputTokens: model.maxOutput / 2,
       },
     });
     const result = await chat.sendMessageStream(messages[messages.length - 1].content);

@@ -35,7 +35,8 @@ export const callClaude = async (
   onFinish: (_?: string) => void
 ) => {
   const anthropic = new Anthropic({ apiKey });
-  const data = prepareChatData(messages, model.name, 0.3, model.maxTokens);
+  // TODO: calculate remaining max output tokens
+  const data = prepareChatData(messages, model.name, 0.3, model.maxOutput / 2);
   await anthropic.messages
     .stream(data)
     .on("text", (text) => {

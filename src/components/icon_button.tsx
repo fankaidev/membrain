@@ -8,14 +8,21 @@ export interface IconButtonProps {
   size?: SizeType;
   tooltip?: string;
   onClick: () => void;
+  style?: React.CSSProperties;
 }
 
-export const IconButton = ({ icon, onClick, size = "small", tooltip = "" }: IconButtonProps) => {
+export const IconButton = ({
+  icon,
+  onClick,
+  size = "small",
+  tooltip = "",
+  style,
+}: IconButtonProps) => {
   const { displayText } = useContext(LocaleContext)!;
 
   return (
     <Tooltip title={displayText(tooltip)}>
-      <Button icon={icon} type="text" size={size} onClick={onClick} />
+      <Button icon={icon} type="text" size={size} onClick={onClick} style={style} />
     </Tooltip>
   );
 };

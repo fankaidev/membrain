@@ -3,19 +3,15 @@ import { Flex, Input } from "antd";
 import React, { ChangeEvent, useContext, useState } from "react";
 import { TXT } from "../utils/locale";
 import { ChatTask } from "../utils/message";
+import { ChatContext } from "./chat_context";
 import { IconButton } from "./icon_button";
 import { LocaleContext } from "./locale_context";
 
-export const ChatInput = ({
-  enabled,
-  setChatTask,
-}: {
-  enabled: boolean;
-  setChatTask: (task: ChatTask | null) => void;
-}) => {
+export const ChatInput = ({ enabled }: { enabled: boolean }) => {
   const [userInput, setUserInput] = useState("");
 
   const { displayText } = useContext(LocaleContext)!;
+  const { setChatTask } = useContext(ChatContext)!;
 
   const handleUserInputChange = (e: ChangeEvent<any>) => {
     setUserInput(e.target.value);

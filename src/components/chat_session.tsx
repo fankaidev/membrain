@@ -7,18 +7,19 @@ import {
 } from "@ant-design/icons";
 import { Button, Col, Row } from "antd";
 import markdownit from "markdown-it";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { callClaude } from "../utils/anthropic_api";
 import { Model, ModelProvider, ProviderConfig } from "../utils/config";
 import { callGemini } from "../utils/google_api";
+import { TXT } from "../utils/locale";
 import { CHAT_STATUS_PROCESSING, ChatTask, Message, Reference } from "../utils/message";
 import { callOpenAIApi } from "../utils/openai_api";
 import { getCurrentSelection } from "../utils/page_content";
 import { BlankDiv } from "./common";
+import { LocaleContext } from "./locale_context";
 import { addPageToReference } from "./references";
 
 export const ChatSession = ({
-  displayText,
   chatLanguage,
   modelName,
   enabledModels,
@@ -32,7 +33,6 @@ export const ChatSession = ({
   setHistory,
   setChatStatus,
 }: {
-  displayText: (text: string) => string;
   chatLanguage: string;
   modelName: string;
   enabledModels: [Model, ModelProvider][];
@@ -49,6 +49,7 @@ export const ChatSession = ({
   const [currentAnswer, setCurrentAnswer] = useState("");
   const [round, setRound] = useState(0);
   const [collpasedIndexes, setCollapsedIndexes] = useState<Set<number>>(new Set());
+  const { displayText } = useContext(LocaleContext)!;
 
   const md = markdownit();
 
@@ -93,7 +94,7 @@ export const ChatSession = ({
     let systemPrompt = `You are a smart assistant, please try to answer user's questions as accurately as possible.
     You should use following language to communicate with user: \`${chatLanguage}\` \n`;
     if (context_references.length > 0) {
-      systemPrompt += `${displayText("prompt_useReferences")}\n`;
+      systemPrompt += `${displayText(TXT.PROMPT_USE_REF)}\n`;
       for (const [index, ref] of context_references.entries()) {
         systemPrompt += `${index + 1}: type=${ref.type}`;
         if (ref.type === "webpage") {
@@ -156,9 +157,9 @@ export const ChatSession = ({
     if (chatTask.reference_type === "page") {
       addPageToReference(references, setReferences).then((pageRef) => {
         if (pageRef) {
-          const prompt = `${displayText("prompt_pageReference")}\n\n\`\`\`${
-            pageRef.title
-          }\`\`\`\n\n${chatTask.prompt}`;
+          const prompt = `${displayText(TXT.PROMPT_PAGE_REF)}\n\n\`\`\`${pageRef.title}\`\`\`\n\n${
+            chatTask.prompt
+          }`;
           startChat(prompt, [pageRef]);
         } else {
           setChatStatus("fail to get content of current page");
@@ -168,7 +169,7 @@ export const ChatSession = ({
       getCurrentSelection().then((selection) => {
         if (selection) {
           console.log("selection is", selection);
-          const prompt = `${displayText("prompt_selectionReference")}\n\n
+          const prompt = `${displayText(TXT.PROMPT_SELECTION_REF)}\n\n
           \`\`\`${selection}\`\`\`\n\n${chatTask.prompt}`;
           startChat(prompt, references);
         } else {

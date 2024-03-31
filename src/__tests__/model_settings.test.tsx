@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import React from "react";
+import { LocaleContext } from "../components/locale_context";
 import { ModelSettings } from "../components/model_settings";
 import { Model, ModelProvider, ProviderConfig } from "../utils/config";
 import { getLocaleMessage } from "../utils/locale";
@@ -31,15 +32,16 @@ describe("ModelSettings Component", () => {
     ];
     let setCustomProviders = jest.fn();
     render(
-      <ModelSettings
-        displayText={(text) => getLocaleMessage("en", text)}
-        providerConfigs={providerConfigs}
-        setProviderConfigs={setProviderConfigs}
-        customModels={customModels}
-        setCustomModels={setCustomModels}
-        customProviders={customProviders}
-        setCustomProviders={setCustomProviders}
-      />
+      <LocaleContext.Provider value={{ displayText: (txt: string) => getLocaleMessage("en", txt) }}>
+        <ModelSettings
+          providerConfigs={providerConfigs}
+          setProviderConfigs={setProviderConfigs}
+          customModels={customModels}
+          setCustomModels={setCustomModels}
+          customProviders={customProviders}
+          setCustomProviders={setCustomProviders}
+        />
+      </LocaleContext.Provider>
     );
 
     const openai = screen.getByTestId("provider_OpenAI");

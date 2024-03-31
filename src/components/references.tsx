@@ -4,12 +4,15 @@ import {
   FileAddOutlined,
   FileTextOutlined,
 } from "@ant-design/icons";
-import { Button, Collapse, Flex, Tag, Tooltip } from "antd";
+import { Collapse, Flex, Tag } from "antd";
 import markdownit from "markdown-it";
-import React from "react";
+import React, { useContext } from "react";
+import { TXT } from "../utils/locale";
 import { Reference } from "../utils/message";
 import { getCurrentPageRef, getCurrentSelectionRef } from "../utils/page_content";
 import { BlankDiv } from "./common";
+import { IconButton } from "./icon_button";
+import { LocaleContext } from "./locale_context";
 
 export const addPageToReference = async (
   references: Reference[],
@@ -29,11 +32,9 @@ export const addPageToReference = async (
 };
 
 export const ReferenceBox = ({
-  displayText,
   references,
   setReferences,
 }: {
-  displayText: (text: string) => string;
   references: Reference[];
   setReferences: (value: Reference[]) => void;
 }) => {
@@ -108,33 +109,30 @@ export const ReferenceBox = ({
     }
   };
 
+  const { displayText } = useContext(LocaleContext)!;
+
   return (
     <>
       {references.length > 0 && displayReferences()}
       {references.length > 0 && <BlankDiv height={4} />}
       <Flex id="reference_actions" justify="space-between">
-        <Tag>{`${references.length} ${displayText("label_references")}`}</Tag>
+        <Tag>{`${references.length} ${displayText(TXT.LABEL_REFERENCES)}`}</Tag>
         <span>
-          <Tooltip title={displayText("tooltip_addCurrentPage")}>
-            <Button
-              icon={<FileAddOutlined />}
-              type="text"
-              size="small"
-              onClick={() => addPageToReference(references, setReferences)}
-            />
-          </Tooltip>
-
-          <Tooltip title={displayText("tooltip_addSelection")}>
-            <Button
-              icon={<FileTextOutlined />}
-              type="text"
-              size="small"
-              onClick={addSelectionToReference}
-            />
-          </Tooltip>
-          <Tooltip title={displayText("tooltip_clearReferences")}>
-            <Button icon={<DeleteOutlined />} type="text" size="small" onClick={clearReferences} />
-          </Tooltip>
+          <IconButton
+            icon={<FileAddOutlined />}
+            onClick={() => addPageToReference(references, setReferences)}
+            tooltip={TXT.ACTION_REF_ADD_PAGE}
+          />
+          <IconButton
+            icon={<FileTextOutlined />}
+            onClick={addSelectionToReference}
+            tooltip={TXT.ACTION_REF_ADD_SELECTION}
+          />
+          <IconButton
+            icon={<DeleteOutlined />}
+            onClick={clearReferences}
+            tooltip={TXT.ACTION_REF_CLEAR}
+          />
         </span>
       </Flex>
     </>

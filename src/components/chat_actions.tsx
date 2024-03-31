@@ -1,28 +1,34 @@
 import { InfoCircleOutlined, SyncOutlined } from "@ant-design/icons";
 import { Button, Flex, Tag } from "antd";
-import React from "react";
-import { ChatTask, PromptTemplate } from "../utils/message";
+import React, { useContext } from "react";
+
+import { TXT } from "../utils/locale";
+import { CHAT_STATUS_PROCESSING, ChatTask, PromptTemplate } from "../utils/message";
+import { LocaleContext } from "./locale_context";
 
 export const ChatActions = ({
-  displayText,
   setChatTask,
   promptTemplates,
   chatStatus,
 }: {
-  displayText: (text: string) => string;
   setChatTask: (task: ChatTask | null) => void;
   promptTemplates: PromptTemplate[];
   chatStatus: string;
 }) => {
+  const { displayText } = useContext(LocaleContext)!;
+
   const chatTasks: [string, ChatTask][] = [
-    [displayText("button_summarize"), new ChatTask(displayText("prompt_summarize"), "all")],
     [
-      displayText("button_summarizePage"),
-      new ChatTask(displayText("prompt_summarizePage"), "page"),
+      displayText(TXT.ACTION_CHAT_SUMMARIZE),
+      new ChatTask(displayText(TXT.PROMPT_SUMMARIZE), "all"),
     ],
     [
-      displayText("button_summarizeSelection"),
-      new ChatTask(displayText("prompt_summarizeSelection"), "selection"),
+      displayText(TXT.ACTION_CHAT_SUMMARIZE_PAGE),
+      new ChatTask(displayText(TXT.PROMPT_SUMMARIZE_PAGE), "page"),
+    ],
+    [
+      displayText(TXT.ACTION_CHAT_SUMMARIZE_SELECTION),
+      new ChatTask(displayText(TXT.PROMPT_SUMMARIZE_SELECTION), "selection"),
     ],
   ];
 
@@ -34,17 +40,17 @@ export const ChatActions = ({
 
   return (
     <>
-      {chatStatus === "processing" && (
+      {chatStatus === CHAT_STATUS_PROCESSING && (
         <Tag icon={<SyncOutlined spin />} color="processing" style={{ margin: "8px" }}>
           {chatStatus}
         </Tag>
       )}
-      {chatStatus && chatStatus !== "processing" && (
+      {chatStatus && chatStatus !== CHAT_STATUS_PROCESSING && (
         <Tag icon={<InfoCircleOutlined />} color="error" style={{ margin: "8px" }}>
           {chatStatus}
         </Tag>
       )}
-      {chatStatus !== "processing" && (
+      {chatStatus !== CHAT_STATUS_PROCESSING && (
         <Flex id="actions" wrap="wrap" gap="small" style={{ margin: "8px" }}>
           {chatTasks.map(([title, task], index) => (
             <Button

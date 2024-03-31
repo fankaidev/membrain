@@ -17,13 +17,21 @@ export class Model {
   id: string;
   providerId: string;
   name: string;
-  maxTokens: number;
+  maxContext: number;
+  maxOutput: number;
 
-  constructor(providerId: string, name: string, maxTokens: number, id?: string) {
+  constructor(
+    providerId: string,
+    name: string,
+    maxContext: number,
+    maxOutput: number,
+    id?: string
+  ) {
     this.id = id || uuidv4();
     this.providerId = providerId;
     this.name = name;
-    this.maxTokens = maxTokens;
+    this.maxContext = maxContext;
+    this.maxOutput = maxOutput;
   }
 }
 
@@ -63,15 +71,17 @@ const Yi = new ModelProvider("Yi", "OpenAI", "https://api.lingyiwanwu.com/v1/", 
 
 export const SYSTEM_PROVIDERS: ModelProvider[] = [OpenAI, Anthropic, Google, Moonshot, Yi];
 
+const K = 1024;
+
 export const SYSTEM_MODELS: Model[] = [
-  new Model(OpenAI.id, "gpt-3.5-turbo", 4 * 1024),
-  new Model(OpenAI.id, "gpt-4", 4 * 1024),
-  new Model(Anthropic.id, "claude-3-haiku-20240307", 4 * 1024),
-  new Model(Anthropic.id, "claude-3-sonnet-20240229", 4 * 1024),
-  new Model(Anthropic.id, "claude-3-opus-20240229", 4 * 1024),
-  new Model(Google.id, "gemini-pro", 8 * 1024),
-  new Model(Moonshot.id, "moonshot-v1-8k", 8 * 1024),
-  new Model(Moonshot.id, "moonshot-v1-32k", 8 * 1024),
-  new Model(Yi.id, "yi-34b-chat-0205", 4 * 1024),
-  new Model(Yi.id, "yi-34b-chat-200k", 4 * 1024),
+  new Model(OpenAI.id, "gpt-3.5-turbo", 4 * K, 4 * K),
+  new Model(OpenAI.id, "gpt-4", 8 * K, 8 * K),
+  new Model(Anthropic.id, "claude-3-haiku-20240307", 200 * K, 4 * K),
+  new Model(Anthropic.id, "claude-3-sonnet-20240229", 200 * K, 4 * K),
+  new Model(Anthropic.id, "claude-3-opus-20240229", 200 * K, 4 * K),
+  new Model(Google.id, "gemini-pro", 32 * K, 8 * K),
+  new Model(Moonshot.id, "moonshot-v1-8k", 8 * K, 8 * K),
+  new Model(Moonshot.id, "moonshot-v1-32k", 32 * K, 8 * K),
+  new Model(Yi.id, "yi-34b-chat-0205", 4 * K, 4 * K),
+  new Model(Yi.id, "yi-34b-chat-200k", 4 * K, 8 * K),
 ];

@@ -76,12 +76,18 @@ export const ModelSettings = ({
         const model = new Model(
           editingModel.providerId,
           values.name,
-          values.maxTokens,
+          values.maxContext,
+          values.maxOutput,
           editingModel.id
         );
         setCustomModels(customModels.map((m) => (m.id === editingModel.id ? model : m)));
       } else {
-        const model = new Model(editingProvider!.id, values.name, values.maxTokens);
+        const model = new Model(
+          editingProvider!.id,
+          values.name,
+          values.maxContext,
+          values.maxOutput
+        );
         setCustomModels([...customModels, model]);
         const config = providerConfigs[editingProvider!.id];
         config.enabledModels.push(model.name);
@@ -210,6 +216,7 @@ export const ModelSettings = ({
     return (
       <Modal
         open={openModelModal}
+        onCancel={() => setOpenModelModal(false)}
         title="Model"
         data-testid="model_modal"
         footer={[
@@ -235,8 +242,15 @@ export const ModelSettings = ({
             <Input />
           </Form.Item>
           <Form.Item
-            name="maxTokens"
-            label={displayText(TXT.LABEL_MAX_TOKENS)}
+            name="maxContext"
+            label={displayText(TXT.LABEL_MAX_CONTEXT)}
+            rules={[{ required: true }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="maxOutput"
+            label={displayText(TXT.LABEL_MAX_OUTPUT)}
             rules={[{ required: true }]}
           >
             <Input />

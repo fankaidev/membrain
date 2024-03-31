@@ -25,7 +25,7 @@ describe("ModelSettings Component", () => {
       tesla: new ProviderConfig("tesla", true, "key1", ["model_3"]),
     };
     const setProviderConfigs = jest.fn();
-    let customModels: Model[] = [new Model("tesla", "model_3", 4096)];
+    let customModels: Model[] = [new Model("tesla", "model_3", 4096, 4096)];
     let setCustomModels = jest.fn();
     let customProviders: ModelProvider[] = [
       new ModelProvider("Tesla", "OpenAI", "https://api.tesla.com", "tesla"),

@@ -4,18 +4,12 @@ import React, { useContext } from "react";
 
 import { TXT } from "../utils/locale";
 import { CHAT_STATUS_PROCESSING, ChatTask, PromptTemplate } from "../utils/message";
+import { ChatContext } from "./chat_context";
 import { LocaleContext } from "./locale_context";
 
-export const ChatActions = ({
-  setChatTask,
-  promptTemplates,
-  chatStatus,
-}: {
-  setChatTask: (task: ChatTask | null) => void;
-  promptTemplates: PromptTemplate[];
-  chatStatus: string;
-}) => {
+export const ChatActions = ({ promptTemplates }: { promptTemplates: PromptTemplate[] }) => {
   const { displayText } = useContext(LocaleContext)!;
+  const { setChatTask, chatStatus } = useContext(ChatContext)!;
 
   const chatTasks: [string, ChatTask][] = [
     [

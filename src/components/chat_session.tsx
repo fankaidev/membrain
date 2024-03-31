@@ -12,9 +12,10 @@ import { callClaude } from "../utils/anthropic_api";
 import { Model, ModelProvider, ProviderConfig } from "../utils/config";
 import { callGemini } from "../utils/google_api";
 import { TXT } from "../utils/locale";
-import { CHAT_STATUS_PROCESSING, ChatTask, Message, Reference } from "../utils/message";
+import { CHAT_STATUS_PROCESSING, Message, Reference } from "../utils/message";
 import { callOpenAIApi } from "../utils/openai_api";
 import { getCurrentSelection } from "../utils/page_content";
+import { ChatContext } from "./chat_context";
 import { BlankDiv } from "./common";
 import { LocaleContext } from "./locale_context";
 import { addPageToReference } from "./references";
@@ -25,31 +26,24 @@ export const ChatSession = ({
   enabledModels,
   providerConfigs,
   references,
-  chatTask,
   history,
-  chatStatus,
   setReferences,
-  setChatTask,
   setHistory,
-  setChatStatus,
 }: {
   chatLanguage: string;
   modelName: string;
   enabledModels: [Model, ModelProvider][];
   providerConfigs: Record<string, ProviderConfig>;
   references: Reference[];
-  chatTask: ChatTask | null;
   history: Message[];
-  chatStatus: string;
   setReferences: (value: Reference[]) => void;
-  setChatTask: (task: ChatTask | null) => void;
   setHistory: (history: Message[]) => void;
-  setChatStatus: (status: string) => void;
 }) => {
   const [currentAnswer, setCurrentAnswer] = useState("");
   const [round, setRound] = useState(0);
   const [collpasedIndexes, setCollapsedIndexes] = useState<Set<number>>(new Set());
   const { displayText } = useContext(LocaleContext)!;
+  const { chatTask, setChatTask, chatStatus, setChatStatus } = useContext(ChatContext)!;
 
   const md = markdownit();
 

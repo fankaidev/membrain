@@ -4,20 +4,20 @@ import {
   MessageOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import { Button, Col, Drawer, Flex, Row, Select } from "antd";
+import { Button, Col, Drawer, Flex, Row, Select, Space } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ChatActions } from "./components/chat_actions";
+import { ChatContext } from "./components/chat_context";
 import { ChatInput } from "./components/chat_input";
 import { ChatSession } from "./components/chat_session";
-import { BlankDiv } from "./components/common";
 import { IconButton } from "./components/icon_button";
 import { LocaleContext } from "./components/locale_context";
 import { ModelSettings } from "./components/model_settings";
 import { PromptSettings } from "./components/prompt_settings";
 import { ReferenceBox, addPageToReference } from "./components/references";
 import { GeneralSettings } from "./components/settings";
-import { useStorage } from "./hooks/useStorage";
+import { useLocalStorage, useSyncStorage } from "./hooks/useStorage";
 import {
   Model,
   ModelProvider,
@@ -38,34 +38,30 @@ import {
 } from "./utils/message";
 
 export const Assistant = () => {
-  const [UILanguage, setUILanguage] = useStorage<string>("sync", "UILanguage", "en");
-  const [chatLanguage, setChatLanguage] = useStorage<string>("sync", "chatLanguage", "English");
-  const [modelName, setModelName] = useStorage<string>("local", "modelName", "");
-  const [history, setHistory] = useStorage<Message[]>("local", "chatHistory", []);
-  const [references, setReferences] = useStorage<Reference[]>("local", "references", []);
+  const [UILanguage, setUILanguage] = useSyncStorage<string>("UILanguage", "en");
+  const [chatLanguage, setChatLanguage] = useSyncStorage<string>("chatLanguage", "English");
+  const [modelName, setModelName] = useLocalStorage<string>("modelName", "");
+  const [history, setHistory] = useLocalStorage<Message[]>("chatHistory", []);
+  const [references, setReferences] = useLocalStorage<Reference[]>("references", []);
   const [chatTask, setChatTask] = useState<ChatTask | null>(null);
   const [chatStatus, setChatStatus] = useState("");
   const [openGeneralSettings, setOpenGeneralSettings] = useState(false);
   const [openPromptSettings, setOpenPromptSettings] = useState(false);
   const [openModelSettings, setOpenModelSettings] = useState(false);
-  const [promptTemplates, setPromptTemplates] = useStorage<PromptTemplate[]>(
-    "sync",
+  const [promptTemplates, setPromptTemplates] = useSyncStorage<PromptTemplate[]>(
     "promptTemplates",
     []
   );
-  const [providerConfigs, setProviderConfigs] = useStorage<Record<string, ProviderConfig>>(
-    "sync",
-    "providerConfigs",
-    {}
-  );
-  const [customModels, setCustomModels] = useStorage<Model[]>("sync", "customModels", []);
-  const [customProviders, setCustomProviders] = useStorage<ModelProvider[]>(
-    "sync",
+  const [customModels, setCustomModels] = useSyncStorage<Model[]>("customModels", []);
+  const [customProviders, setCustomProviders] = useSyncStorage<ModelProvider[]>(
     "customProviders",
     []
   );
-
-  const chatHistoryRef = useRef(null);
+  const [providerConfigs, setProviderConfigs] = useSyncStorage<Record<string, ProviderConfig>>(
+    "providerConfigs",
+    {}
+  );
+  const chatBoxRef = useRef(null);
   const allModels = [...SYSTEM_MODELS, ...customModels];
   const allProviders = [...SYSTEM_PROVIDERS, ...customProviders];
 
@@ -110,8 +106,8 @@ export const Assistant = () => {
   }, []);
 
   useEffect(() => {
-    if (chatHistoryRef.current) {
-      const element = chatHistoryRef.current as HTMLElement;
+    if (chatBoxRef.current) {
+      const element = chatBoxRef.current as HTMLElement;
       element.scrollTop = element.scrollHeight;
     }
   }, [history]);
@@ -142,53 +138,86 @@ export const Assistant = () => {
     console.debug("enabled models=", enabledModels);
   }, [providerConfigs, enabledModels]);
 
+  const selectModel = () => {
+    return (
+      <>
+        {enabledModels.length > 0 && (
+          <Select
+            onChange={setModelName}
+            value={modelName}
+            style={{ width: "100%" }}
+            placeholder="Select Model"
+            options={enabledModels.map((m) => ({ value: m[0].name }))}
+            showSearch
+          />
+        )}
+        {enabledModels.length === 0 && (
+          <Row>
+            <Button
+              icon={<DeploymentUnitOutlined />}
+              type="text"
+              size="middle"
+              onClick={() => setOpenModelSettings(true)}
+              danger
+            >
+              {displayText(TXT.TIP_SET_UP_MODELS)}
+            </Button>
+          </Row>
+        )}
+      </>
+    );
+  };
+
+  const settings = () => {
+    return (
+      <>
+        <Drawer
+          title={displayText("tooltip_generalSettings")}
+          onClose={() => setOpenGeneralSettings(false)}
+          open={openGeneralSettings}
+          keyboard={false}
+        >
+          <GeneralSettings
+            UILanguage={UILanguage}
+            setUILanguage={setUILanguage}
+            chatLanguage={chatLanguage}
+            setChatLanguage={setChatLanguage}
+          />
+        </Drawer>
+        <Drawer
+          title={displayText("tooltip_promptSettings")}
+          onClose={() => setOpenPromptSettings(false)}
+          open={openPromptSettings}
+          keyboard={false}
+        >
+          <PromptSettings
+            promptTemplates={promptTemplates}
+            setPromptTemplates={setPromptTemplates}
+          />
+        </Drawer>
+        <Drawer
+          title={displayText("tooltip_modelSettings")}
+          onClose={() => setOpenModelSettings(false)}
+          open={openModelSettings}
+          keyboard={false}
+        >
+          <ModelSettings
+            providerConfigs={providerConfigs}
+            setProviderConfigs={setProviderConfigs}
+            customModels={customModels}
+            setCustomModels={setCustomModels}
+            customProviders={customProviders}
+            setCustomProviders={setCustomProviders}
+          />
+        </Drawer>
+      </>
+    );
+  };
   const content = (
     <>
-      <Drawer
-        title={displayText("tooltip_generalSettings")}
-        onClose={() => setOpenGeneralSettings(false)}
-        open={openGeneralSettings}
-        keyboard={false}
-      >
-        <GeneralSettings
-          UILanguage={UILanguage}
-          setUILanguage={setUILanguage}
-          chatLanguage={chatLanguage}
-          setChatLanguage={setChatLanguage}
-        />
-      </Drawer>
-      <Drawer
-        title={displayText("tooltip_promptSettings")}
-        onClose={() => setOpenPromptSettings(false)}
-        open={openPromptSettings}
-        keyboard={false}
-      >
-        <PromptSettings promptTemplates={promptTemplates} setPromptTemplates={setPromptTemplates} />
-      </Drawer>
-      <Drawer
-        title={displayText("tooltip_modelSettings")}
-        onClose={() => setOpenModelSettings(false)}
-        open={openModelSettings}
-        keyboard={false}
-      >
-        <ModelSettings
-          providerConfigs={providerConfigs}
-          setProviderConfigs={setProviderConfigs}
-          customModels={customModels}
-          setCustomModels={setCustomModels}
-          customProviders={customProviders}
-          setCustomProviders={setCustomProviders}
-        />
-      </Drawer>
-      <Flex
-        vertical
-        justify="start"
-        style={{
-          height: "100%",
-          boxSizing: "border-box",
-        }}
-      >
-        <Row>
+      {settings()}
+      <Flex vertical justify="start" style={{ height: "100%" }}>
+        <Row id="settings">
           <Col span={22}>
             <IconButton
               icon={<SettingOutlined />}
@@ -196,14 +225,12 @@ export const Assistant = () => {
               size="middle"
               tooltip={TXT.PAGE_GENERAL_SETTINGS}
             />
-
             <IconButton
               icon={<MessageOutlined />}
               onClick={() => setOpenPromptSettings(true)}
               size="middle"
               tooltip={TXT.PAGE_PROMPT_SETTINGS}
             />
-
             <IconButton
               icon={<DeploymentUnitOutlined />}
               onClick={() => setOpenModelSettings(true)}
@@ -217,84 +244,54 @@ export const Assistant = () => {
               onClick={clearAll}
               size="middle"
               tooltip={TXT.ACTION_CLEAR_ALL}
+              style={{ color: "red" }}
             />
           </Col>
         </Row>
 
-        <div id="references" style={{ padding: "8px 0px 8px 0px" }}>
+        <div id="references" style={{ padding: "4px 0px 4px 0px" }}>
           <ReferenceBox references={references} setReferences={setReferences} />
         </div>
 
         <div
           id="chats"
-          ref={chatHistoryRef}
+          ref={chatBoxRef}
           style={{
             flex: "1 1",
             overflow: "auto",
             borderStyle: "solid none solid none",
             borderWidth: "1px",
             borderColor: "WhiteSmoke",
-            padding: "8px 0px 8px 0px",
+            padding: "4px 0px 4px 0px",
           }}
         >
           <ChatSession
             chatLanguage={chatLanguage}
             modelName={modelName}
+            enabledModels={enabledModels}
             providerConfigs={providerConfigs}
             references={references}
-            chatTask={chatTask}
-            history={history}
-            chatStatus={chatStatus}
             setReferences={setReferences}
-            setChatTask={setChatTask}
+            history={history}
             setHistory={setHistory}
-            setChatStatus={setChatStatus}
-            enabledModels={enabledModels}
           />
-          <ChatActions
-            promptTemplates={promptTemplates}
-            setChatTask={setChatTask}
-            chatStatus={chatStatus}
-          />
+          <ChatActions promptTemplates={promptTemplates} />
         </div>
 
-        <div id="inputs" style={{ padding: "8px 4px 0px 4px" }}>
-          {enabledModels.length > 0 && (
-            <Select
-              onChange={setModelName}
-              value={modelName}
-              style={{ width: "100%" }}
-              placeholder="Select Model"
-              options={enabledModels.map((m) => ({ value: m[0].name }))}
-              showSearch
-            />
-          )}
-          {enabledModels.length === 0 && (
-            <Row>
-              <Button
-                icon={<DeploymentUnitOutlined />}
-                type="text"
-                size="middle"
-                onClick={() => setOpenModelSettings(true)}
-                danger
-              >
-                {displayText(TXT.TIP_SET_UP_MODELS)}
-              </Button>
-            </Row>
-          )}
-          <BlankDiv height={4} />
-          <ChatInput
-            enabled={chatStatus !== CHAT_STATUS_PROCESSING && enabledModels.length > 0}
-            setChatTask={setChatTask}
-          />
-          <BlankDiv height={8} />
-        </div>
+        <Space direction="vertical" style={{ padding: "8px 4px 4px 4px" }}>
+          {selectModel()}
+          <ChatInput enabled={chatStatus !== CHAT_STATUS_PROCESSING && enabledModels.length > 0} />
+        </Space>
       </Flex>
     </>
   );
 
   return (
-    <LocaleContext.Provider value={{ displayText: displayText }}>{content}</LocaleContext.Provider>
+    <ChatContext.Provider value={{ chatStatus, setChatStatus, chatTask, setChatTask }}>
+      <LocaleContext.Provider value={{ displayText: displayText }}>
+        {content}
+      </LocaleContext.Provider>
+    </ChatContext.Provider>
   );
 };
 

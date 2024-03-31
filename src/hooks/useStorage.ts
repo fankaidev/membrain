@@ -30,3 +30,11 @@ export function useStorage<T>(
 
   return [value, (value: T) => setValue(value)];
 }
+
+export function useSyncStorage<T>(key: string, defaultValue: T): [T, (value: T) => void] {
+  return useStorage("sync", key, defaultValue);
+}
+
+export function useLocalStorage<T>(key: string, defaultValue: T): [T, (value: T) => void] {
+  return useStorage("local", key, defaultValue);
+}

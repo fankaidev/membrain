@@ -49,6 +49,16 @@ export class ModelProvider {
   }
 }
 
+export class ModelAndProvider {
+  model: Model;
+  provider: ModelProvider;
+
+  constructor(model: Model, provider: ModelProvider) {
+    this.model = model;
+    this.provider = provider;
+  }
+}
+
 export class ProviderConfig {
   providerId: string;
   enabled: boolean;

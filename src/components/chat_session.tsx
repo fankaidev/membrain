@@ -9,7 +9,7 @@ import { Button, Col, Row } from "antd";
 import markdownit from "markdown-it";
 import React, { useContext, useEffect, useState } from "react";
 import { callClaude } from "../utils/anthropic_api";
-import { Model, ModelProvider, ProviderConfig } from "../utils/config";
+import { ModelAndProvider, ProviderConfig } from "../utils/config";
 import { callGemini } from "../utils/google_api";
 import { TXT } from "../utils/locale";
 import { CHAT_STATUS_PROCESSING, Message, Reference } from "../utils/message";
@@ -21,8 +21,7 @@ import { addPageToReference } from "./references";
 
 export const ChatSession = ({
   chatLanguage,
-  modelName,
-  enabledModels,
+  currentModel,
   providerConfigs,
   references,
   history,
@@ -30,8 +29,7 @@ export const ChatSession = ({
   setHistory,
 }: {
   chatLanguage: string;
-  modelName: string;
-  enabledModels: [Model, ModelProvider][];
+  currentModel: ModelAndProvider | null;
   providerConfigs: Record<string, ProviderConfig>;
   references: Reference[];
   history: Message[];
@@ -83,7 +81,7 @@ export const ChatSession = ({
 
   const initMessages = (content: string, context_references: Reference[]) => {
     const query = new Message("user", content);
-    const reply = new Message("assistant", "", modelName);
+    const reply = new Message("assistant", "", currentModel?.model.name);
     let systemPrompt = `You are a smart assistant, please try to answer user's questions as accurately as possible.
     You should use following language to communicate with user: \`${chatLanguage}\` \n`;
     if (context_references.length > 0) {
@@ -103,15 +101,14 @@ export const ChatSession = ({
   };
 
   const chatWithAI = async (messages: Message[]) => {
-    const modelAndProvider = enabledModels.find((m) => m[0].name === modelName);
-    if (!modelAndProvider) {
-      setChatStatus(`model ${modelName} not found`);
+    if (!currentModel) {
+      setChatStatus(`model not available`);
       return;
     }
-    const [model, provider] = modelAndProvider;
+    const { model, provider } = currentModel;
     const apiKey = providerConfigs[provider.id]?.apiKey;
     if (!apiKey) {
-      setChatStatus(`api key of ${provider.name}:${modelName} not found`);
+      setChatStatus(`api key of ${provider.name}:${model.name} not found`);
       return;
     }
 
@@ -185,8 +182,8 @@ export const ChatSession = ({
   };
 
   const redoChat = (index: number) => {
-    if (chatStatus !== CHAT_STATUS_PROCESSING) {
-      const reply = new Message("assistant", "", modelName);
+    if (chatStatus !== CHAT_STATUS_PROCESSING && currentModel) {
+      const reply = new Message("assistant", "", currentModel.model.name);
       const messages = [...history.slice(0, index + 1), reply];
       setHistory(messages);
       setCollapsedIndexes(new Set([...collpasedIndexes].filter((i) => i <= index)));
@@ -227,7 +224,6 @@ export const ChatSession = ({
                 dangerouslySetInnerHTML={{ __html: html }}
                 style={{
                   marginTop: "-8px",
-                  marginBottom: "-8px",
                 }}
               />
             )}

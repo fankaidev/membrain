@@ -1,18 +1,20 @@
 import { MinusCircleOutlined } from "@ant-design/icons";
 import { Button, Col, Flex, Input, Row, Select, Space } from "antd";
 import TextArea from "antd/es/input/TextArea";
-import React from "react";
+import React, { useContext } from "react";
+import { TXT } from "../utils/locale";
 import { ChatReferenceType, PromptTemplate } from "../utils/message";
+import { LocaleContext } from "./locale_context";
 
 export const PromptSettings = ({
-  displayText,
   promptTemplates,
   setPromptTemplates,
 }: {
-  displayText: (text: string) => string;
   promptTemplates: PromptTemplate[];
   setPromptTemplates: (tasks: PromptTemplate[]) => void;
 }) => {
+  const { displayText } = useContext(LocaleContext)!;
+
   const updateTemplatePrompt = (id: string, prompt: string) => {
     const index = promptTemplates.findIndex((tpl) => tpl.id === id);
     if (index >= 0) {
@@ -46,7 +48,7 @@ export const PromptSettings = ({
     }
   };
   const addPromptTemplate = () => {
-    const value = new PromptTemplate(displayText("input_defaultPromptName"), "", "all");
+    const value = new PromptTemplate(displayText(TXT.INPUT_DEFAULT_PROMPT_NAME), "", "all");
     setPromptTemplates([...promptTemplates, value]);
   };
 
@@ -59,7 +61,7 @@ export const PromptSettings = ({
               <Space direction="vertical" id={tpl.id} style={{ width: "100%" }}>
                 <Row key="name">
                   <Col span={8} style={{ lineHeight: "2" }}>
-                    {displayText("label_name")}
+                    {displayText(TXT.LABEL_NAME)}
                   </Col>
                   <Col span={16}>
                     <Input
@@ -71,15 +73,15 @@ export const PromptSettings = ({
 
                 <Row key="ref_type">
                   <Col span={8} style={{ lineHeight: "2" }}>
-                    {displayText("label_refType")}
+                    {displayText(TXT.LABEL_REF_TYPE)}
                   </Col>
                   <Col span={16}>
                     <Select
                       style={{ width: "100%" }}
                       options={[
-                        { value: "all", label: displayText("label_refTypeAll") },
-                        { value: "page", label: displayText("label_refTypePage") },
-                        { value: "selection", label: displayText("label_refTypeSelection") },
+                        { value: "all", label: displayText(TXT.LABEL_REF_TYPE_ALL) },
+                        { value: "page", label: displayText(TXT.LABEL_REF_TYPE_PAGE) },
+                        { value: "selection", label: displayText(TXT.LABEL_REF_TYPE_SELECTION) },
                       ]}
                       value={tpl.reference_type}
                       onChange={(val) => {
@@ -92,7 +94,7 @@ export const PromptSettings = ({
                   value={tpl.prompt}
                   onChange={(e) => updateTemplatePrompt(tpl.id, e.target.value)}
                   autoSize={{ maxRows: 4 }}
-                  placeholder={displayText("input_customPrompt")}
+                  placeholder={displayText(TXT.INPUT_PROMPT_PLACEHOLDER)}
                 />
               </Space>
             </Col>
@@ -112,7 +114,7 @@ export const PromptSettings = ({
       ))}
 
       <Row justify="center">
-        <Button onClick={addPromptTemplate}>{displayText("button_addPromptTemplate")}</Button>
+        <Button onClick={addPromptTemplate}>{displayText(TXT.ACTION_CONF_ADD_PROMPT_TPL)}</Button>
       </Row>
     </>
   );

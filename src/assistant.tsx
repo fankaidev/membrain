@@ -4,13 +4,15 @@ import {
   MessageOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import { Button, Col, Drawer, Flex, Row, Select, Tooltip } from "antd";
+import { Button, Col, Drawer, Flex, Row, Select } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ChatActions } from "./components/chat_actions";
 import { ChatInput } from "./components/chat_input";
 import { ChatSession } from "./components/chat_session";
 import { BlankDiv } from "./components/common";
+import { IconButton } from "./components/icon_button";
+import { LocaleContext } from "./components/locale_context";
 import { ModelSettings } from "./components/model_settings";
 import { PromptSettings } from "./components/prompt_settings";
 import { ReferenceBox, addPageToReference } from "./components/references";
@@ -26,7 +28,7 @@ import {
   WA_MENU_TASK_SUMMARIZE_PAGE,
   WA_MESSAGE_TYPE_MENU_TASK,
 } from "./utils/config";
-import { getLocaleMessage } from "./utils/locale";
+import { TXT, getLocaleMessage } from "./utils/locale";
 import {
   CHAT_STATUS_PROCESSING,
   ChatTask,
@@ -140,7 +142,7 @@ export const Assistant = () => {
     console.debug("enabled models=", enabledModels);
   }, [providerConfigs, enabledModels]);
 
-  return (
+  const content = (
     <>
       <Drawer
         title={displayText("tooltip_generalSettings")}
@@ -149,7 +151,6 @@ export const Assistant = () => {
         keyboard={false}
       >
         <GeneralSettings
-          displayText={displayText}
           UILanguage={UILanguage}
           setUILanguage={setUILanguage}
           chatLanguage={chatLanguage}
@@ -162,11 +163,7 @@ export const Assistant = () => {
         open={openPromptSettings}
         keyboard={false}
       >
-        <PromptSettings
-          displayText={displayText}
-          promptTemplates={promptTemplates}
-          setPromptTemplates={setPromptTemplates}
-        />
+        <PromptSettings promptTemplates={promptTemplates} setPromptTemplates={setPromptTemplates} />
       </Drawer>
       <Drawer
         title={displayText("tooltip_modelSettings")}
@@ -175,7 +172,6 @@ export const Assistant = () => {
         keyboard={false}
       >
         <ModelSettings
-          displayText={displayText}
           providerConfigs={providerConfigs}
           setProviderConfigs={setProviderConfigs}
           customModels={customModels}
@@ -194,50 +190,39 @@ export const Assistant = () => {
       >
         <Row>
           <Col span={22}>
-            <Tooltip title={displayText("tooltip_generalSettings")}>
-              <Button
-                icon={<SettingOutlined />}
-                type="text"
-                size="middle"
-                onClick={() => setOpenGeneralSettings(true)}
-              />
-            </Tooltip>
-            <Tooltip title={displayText("tooltip_promptSettings")}>
-              <Button
-                icon={<MessageOutlined />}
-                type="text"
-                size="middle"
-                onClick={() => setOpenPromptSettings(true)}
-              />
-            </Tooltip>
-            <Tooltip title={displayText("tooltip_modelSettings")}>
-              <Button
-                icon={<DeploymentUnitOutlined />}
-                type="text"
-                size="middle"
-                onClick={() => setOpenModelSettings(true)}
-              />
-            </Tooltip>
+            <IconButton
+              icon={<SettingOutlined />}
+              onClick={() => setOpenGeneralSettings(true)}
+              size="middle"
+              tooltip={TXT.PAGE_GENERAL_SETTINGS}
+            />
+
+            <IconButton
+              icon={<MessageOutlined />}
+              onClick={() => setOpenPromptSettings(true)}
+              size="middle"
+              tooltip={TXT.PAGE_PROMPT_SETTINGS}
+            />
+
+            <IconButton
+              icon={<DeploymentUnitOutlined />}
+              onClick={() => setOpenModelSettings(true)}
+              size="middle"
+              tooltip={TXT.PAGE_MODEL_SETTINGS}
+            />
           </Col>
           <Col span={2}>
-            <Tooltip title={displayText("tooltip_clearAll")}>
-              <Button
-                icon={<ClearOutlined />}
-                type="text"
-                size="middle"
-                danger
-                onClick={clearAll}
-              />
-            </Tooltip>
+            <IconButton
+              icon={<ClearOutlined />}
+              onClick={clearAll}
+              size="middle"
+              tooltip={TXT.ACTION_CLEAR_ALL}
+            />
           </Col>
         </Row>
 
         <div id="references" style={{ padding: "8px 0px 8px 0px" }}>
-          <ReferenceBox
-            references={references}
-            setReferences={setReferences}
-            displayText={displayText}
-          />
+          <ReferenceBox references={references} setReferences={setReferences} />
         </div>
 
         <div
@@ -253,7 +238,6 @@ export const Assistant = () => {
           }}
         >
           <ChatSession
-            displayText={displayText}
             chatLanguage={chatLanguage}
             modelName={modelName}
             providerConfigs={providerConfigs}
@@ -268,7 +252,6 @@ export const Assistant = () => {
             enabledModels={enabledModels}
           />
           <ChatActions
-            displayText={displayText}
             promptTemplates={promptTemplates}
             setChatTask={setChatTask}
             chatStatus={chatStatus}
@@ -295,13 +278,12 @@ export const Assistant = () => {
                 onClick={() => setOpenModelSettings(true)}
                 danger
               >
-                {displayText("tip_setUpModels")}
+                {displayText(TXT.TIP_SET_UP_MODELS)}
               </Button>
             </Row>
           )}
           <BlankDiv height={4} />
           <ChatInput
-            displayText={displayText}
             enabled={chatStatus !== CHAT_STATUS_PROCESSING && enabledModels.length > 0}
             setChatTask={setChatTask}
           />
@@ -309,6 +291,10 @@ export const Assistant = () => {
         </div>
       </Flex>
     </>
+  );
+
+  return (
+    <LocaleContext.Provider value={{ displayText: displayText }}>{content}</LocaleContext.Provider>
   );
 };
 

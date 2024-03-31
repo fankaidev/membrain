@@ -1,18 +1,21 @@
 import { SendOutlined } from "@ant-design/icons";
-import { Button, Flex, Input, Tooltip } from "antd";
-import React, { ChangeEvent, useState } from "react";
+import { Flex, Input } from "antd";
+import React, { ChangeEvent, useContext, useState } from "react";
+import { TXT } from "../utils/locale";
 import { ChatTask } from "../utils/message";
+import { IconButton } from "./icon_button";
+import { LocaleContext } from "./locale_context";
 
 export const ChatInput = ({
-  displayText,
   enabled,
   setChatTask,
 }: {
-  displayText: (text: string) => string;
   enabled: boolean;
   setChatTask: (task: ChatTask | null) => void;
 }) => {
   const [userInput, setUserInput] = useState("");
+
+  const { displayText } = useContext(LocaleContext)!;
 
   const handleUserInputChange = (e: ChangeEvent<any>) => {
     setUserInput(e.target.value);
@@ -38,15 +41,13 @@ export const ChatInput = ({
       <Flex dir="row" gap={4}>
         <Input.TextArea
           value={userInput}
-          placeholder={displayText("input_placeholder")}
+          placeholder={displayText(TXT.INPUT_CHAT_PLACEHOLDER)}
           onChange={handleUserInputChange}
           onKeyDown={handleUserInputKeyDown}
           autoSize
           allowClear
         />
-        <Tooltip title={displayText("tooltip_sendMessage")}>
-          <Button icon={<SendOutlined />} type="text" size="middle" onClick={chat} />
-        </Tooltip>
+        <IconButton icon={<SendOutlined />} onClick={chat} size="middle" />
       </Flex>
     </>
   );

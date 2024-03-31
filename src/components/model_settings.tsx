@@ -1,6 +1,6 @@
 import { EditOutlined, PlusCircleOutlined } from "@ant-design/icons";
-import { Button, Col, Divider, Form, Input, Modal, Row, Select, Switch, Tooltip } from "antd";
-import React, { useState } from "react";
+import { Button, Col, Divider, Form, Input, Modal, Row, Select, Switch } from "antd";
+import React, { useContext, useState } from "react";
 import {
   Model,
   ModelProvider,
@@ -8,10 +8,12 @@ import {
   SYSTEM_MODELS,
   SYSTEM_PROVIDERS,
 } from "../utils/config";
+import { TXT } from "../utils/locale";
 import { BlankDiv } from "./common";
+import { IconButton } from "./icon_button";
+import { LocaleContext } from "./locale_context";
 
 export const ModelSettings = ({
-  displayText,
   providerConfigs,
   setProviderConfigs,
   customModels,
@@ -19,7 +21,6 @@ export const ModelSettings = ({
   customProviders,
   setCustomProviders,
 }: {
-  displayText: (text: string) => string;
   providerConfigs: Record<string, ProviderConfig>;
   setProviderConfigs: (values: Record<string, ProviderConfig>) => void;
   customModels: Model[];
@@ -35,6 +36,7 @@ export const ModelSettings = ({
   const [modelForm] = Form.useForm();
   const allModels = SYSTEM_MODELS.concat(customModels);
   const allProviders = SYSTEM_PROVIDERS.concat(customProviders);
+  const { displayText } = useContext(LocaleContext)!;
 
   const updateProviderConfig = (config: ProviderConfig) => {
     const values = { ...providerConfigs };
@@ -160,9 +162,11 @@ export const ModelSettings = ({
         </Col>
 
         <Col span={2}>
-          <Tooltip title={displayText("button_addModel")}>
-            <PlusCircleOutlined onClick={() => startAddingModel(provider)} />
-          </Tooltip>
+          <IconButton
+            icon={<PlusCircleOutlined />}
+            onClick={() => startAddingModel(provider)}
+            tooltip={TXT.ACTION_CONF_ADD_MODEL}
+          />
         </Col>
         <Col span={3}>
           <Switch checked={config.enabled} onChange={toggleProvider} />
@@ -210,7 +214,7 @@ export const ModelSettings = ({
         data-testid="model_modal"
         footer={[
           <Button key="cancel" onClick={() => setOpenModelModal(false)}>
-            {displayText("button_cancel")}
+            {displayText(TXT.ACTION_FORM_CANCEL)}
           </Button>,
           <Button
             key="delete"
@@ -219,20 +223,20 @@ export const ModelSettings = ({
             onClick={deleteModel}
             disabled={!editingModel || !customModels.includes(editingModel)}
           >
-            {displayText("button_delete")}
+            {displayText(TXT.ACTION_FORM_DELETE)}
           </Button>,
           <Button key="submit" type="primary" onClick={upsertModel}>
-            {displayText("button_submit")}
+            {displayText(TXT.ACTION_FORM_SUBMIT)}
           </Button>,
         ]}
       >
         <Form form={modelForm} layout="vertical">
-          <Form.Item name="name" label={displayText("label_name")} rules={[{ required: true }]}>
+          <Form.Item name="name" label={displayText(TXT.LABEL_NAME)} rules={[{ required: true }]}>
             <Input />
           </Form.Item>
           <Form.Item
             name="maxTokens"
-            label={displayText("label_maxTokens")}
+            label={displayText(TXT.LABEL_MAX_TOKENS)}
             rules={[{ required: true }]}
           >
             <Input />
@@ -322,7 +326,7 @@ export const ModelSettings = ({
       {displayModelModal()}
       {displayProviderModal()}
       <Row justify="center">
-        <Button onClick={startAddingProvider}>{displayText("button_addProvider")}</Button>
+        <Button onClick={startAddingProvider}>{displayText(TXT.ACTION_CONF_ADD_PROVIDER)}</Button>
       </Row>
     </>
   );

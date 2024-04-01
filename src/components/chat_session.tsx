@@ -81,9 +81,7 @@ export const ChatSession = ({
     setChatStatus("");
   };
 
-  const initMessages = (content: string, context_references: Reference[]) => {
-    const query = new Message("user", content);
-    const reply = new Message("assistant", "", currentModel?.model.name, temperature);
+  const getSystemMessage = (context_references: Reference[]) => {
     let systemPrompt = `You are a smart assistant, please try to answer user's questions as accurately as possible.
     You should use following language to communicate with user: \`${chatLanguage}\` \n`;
     if (context_references.length > 0) {
@@ -96,7 +94,13 @@ export const ChatSession = ({
         systemPrompt += `\n===\n${ref.content}\n===\n`;
       }
     }
-    const systemMsg = new Message("system", systemPrompt);
+    return new Message("system", systemPrompt);
+  };
+
+  const initMessages = (content: string, context_references: Reference[]) => {
+    const query = new Message("user", content);
+    const reply = new Message("assistant", "", currentModel?.model.name, temperature);
+    const systemMsg = getSystemMessage(context_references);
     const messages = [systemMsg, ...history, query];
     setHistory([...history, query, reply]);
     return messages;
@@ -194,9 +198,11 @@ export const ChatSession = ({
   const redoChat = (index: number) => {
     if (chatStatus !== CHAT_STATUS_PROCESSING && currentModel) {
       const reply = new Message("assistant", "", currentModel.model.name, temperature);
-      const messages = [...history.slice(0, index + 1), reply];
-      setHistory(messages);
+      // FIXME: should save references for each message ?
+      setHistory([...history.slice(0, index + 1), reply]);
       setCollapsedIndexes(new Set([...collpasedIndexes].filter((i) => i <= index)));
+      const systemMsg = getSystemMessage(references);
+      const messages = [systemMsg, ...history.slice(0, index + 1), reply];
       chatWithAI(messages);
     }
   };

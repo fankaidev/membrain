@@ -1,16 +1,15 @@
-import { DeploymentUnitOutlined, SendOutlined } from "@ant-design/icons";
+import { CloseCircleOutlined, DeploymentUnitOutlined, SendOutlined } from "@ant-design/icons";
 import { Button, Flex, Input, Row, Select } from "antd";
 import React, { ChangeEvent, useContext, useEffect, useState } from "react";
 import { Model, ModelAndProvider, ModelProvider, ProviderConfig } from "../utils/config";
 import { TXT } from "../utils/locale";
-import { ChatTask } from "../utils/message";
+import { CHAT_STATUS_PROCESSING, ChatTask } from "../utils/message";
 import { ChatContext } from "./chat_context";
 import { BlankDiv } from "./common";
 import { IconButton } from "./icon_button";
 import { LocaleContext } from "./locale_context";
 
 export const ChatInput = ({
-  enabled,
   currentModel,
   allModels,
   allProviders,
@@ -18,7 +17,6 @@ export const ChatInput = ({
   setCurrentModel,
   setOpenModelSettings,
 }: {
-  enabled: boolean;
   currentModel: ModelAndProvider | null;
   allModels: Model[];
   allProviders: ModelProvider[];
@@ -28,7 +26,7 @@ export const ChatInput = ({
 }) => {
   const [userInput, setUserInput] = useState("");
   const { displayText } = useContext(LocaleContext)!;
-  const { setChatTask } = useContext(ChatContext)!;
+  const { setChatTask, chatStatus } = useContext(ChatContext)!;
 
   const enabledModels: ModelAndProvider[] = allProviders
     .map((p) => [p, providerConfigs[p.id]] as [ModelProvider, ProviderConfig])
@@ -62,11 +60,18 @@ export const ChatInput = ({
   };
 
   const sendChat = () => {
-    if (!enabled || !userInput.trim()) {
+    if (!userInput.trim()) {
+      return;
+    }
+    if (!isCurrentModelValid() || chatStatus === CHAT_STATUS_PROCESSING) {
       return;
     }
     setChatTask(new ChatTask(userInput.trim(), "all"));
     setUserInput("");
+  };
+
+  const stopChat = () => {
+    setChatTask(null);
   };
 
   const handleUserInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -111,7 +116,11 @@ export const ChatInput = ({
           autoSize
           allowClear
         />
-        <IconButton icon={<SendOutlined />} onClick={sendChat} size="middle" />
+        {chatStatus === CHAT_STATUS_PROCESSING ? (
+          <IconButton icon={<CloseCircleOutlined />} onClick={stopChat} size="middle" />
+        ) : (
+          <IconButton icon={<SendOutlined />} onClick={sendChat} size="middle" />
+        )}
       </Flex>
     </div>
   );

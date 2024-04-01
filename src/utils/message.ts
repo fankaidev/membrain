@@ -1,3 +1,4 @@
+import { uniqueId } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
 export class Message {
@@ -39,12 +40,14 @@ export class Reference {
 export type ChatReferenceType = "all" | "page" | "selection";
 
 export class ChatTask {
+  id: string;
   prompt: string;
   reference_type: ChatReferenceType;
 
   constructor(prompt: string, reference_type: ChatReferenceType) {
     this.prompt = prompt;
     this.reference_type = reference_type;
+    this.id = new Date().toISOString() + "_" + uniqueId();
   }
 }
 
@@ -62,4 +65,5 @@ export class PromptTemplate {
   }
 }
 
-export const CHAT_STATUS_PROCESSING = "processing";
+export const CHAT_STATUS_PROCESSING = "__processing__";
+export const CHAT_STATUS_EMPTY = "__empty__";

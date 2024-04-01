@@ -2,30 +2,6 @@ import { OpenAI } from "openai";
 import { Model, ModelProvider } from "./config";
 import { Message } from "./message";
 
-async function callModel(
-  apiKey: string,
-  baseURL: string,
-  data: any,
-  onFinish: (_?: string) => void,
-  onContent: (_: string) => void
-) {
-  try {
-    const openai = new OpenAI({
-      apiKey,
-      baseURL,
-      dangerouslyAllowBrowser: true,
-    });
-    const stream = await openai.chat.completions.create(data);
-    // @ts-ignore
-    for await (const chunk of stream) {
-      onContent(chunk.choices[0]?.delta?.content || "");
-    }
-    onFinish();
-  } catch (error) {
-    onFinish(error?.toString());
-  }
-}
-
 function prepareChatData(
   query_messages: Message[],
   model: string,
@@ -41,7 +17,7 @@ function prepareChatData(
       });
     }
   }
-  const data = {
+  const data: any = {
     model,
     messages,
     temperature,
@@ -57,10 +33,26 @@ export const callOpenAIApi = async (
   model: Model,
   temperature: number,
   query_messages: Message[],
-  onContent: (_: string) => void,
-  onFinish: (_?: string) => void
+  chatId: string,
+  onContent: (chatId: string, content: string) => void,
+  onFinish: (chatId: string, error?: string) => void
 ) => {
   // TODO: calculate remaining max output tokens
   const data = prepareChatData(query_messages, model.name, temperature, model.maxOutput / 2);
-  callModel(apiKey, provider.endpoint, data, onFinish, onContent);
+
+  try {
+    const openai = new OpenAI({
+      apiKey,
+      baseURL: provider.endpoint,
+      dangerouslyAllowBrowser: true,
+    });
+    const stream = await openai.chat.completions.create(data);
+    // @ts-ignore
+    for await (const chunk of stream) {
+      onContent(chatId, chunk.choices[0]?.delta?.content || "");
+    }
+    onFinish(chatId);
+  } catch (error) {
+    onFinish(chatId, error?.toString());
+  }
 };

@@ -32,8 +32,9 @@ export const callClaude = async (
   model: Model,
   temperature: number,
   messages: Message[],
-  onContent: (_: string) => void,
-  onFinish: (_?: string) => void
+  chatId: string,
+  onContent: (chatId: string, content: string) => void,
+  onFinish: (chatId: string, error?: string) => void
 ) => {
   const anthropic = new Anthropic({ apiKey });
   // TODO: calculate remaining max output tokens
@@ -41,12 +42,12 @@ export const callClaude = async (
   await anthropic.messages
     .stream(data)
     .on("text", (text) => {
-      onContent(text);
+      onContent(chatId, text);
     })
     .on("error", (error) => {
-      onFinish(error.message);
+      onFinish(chatId, error.message);
     })
     .on("end", () => {
-      onFinish();
+      onFinish(chatId);
     });
 };

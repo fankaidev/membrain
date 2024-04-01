@@ -30,13 +30,7 @@ import {
   WA_MESSAGE_TYPE_MENU_TASK,
 } from "./utils/config";
 import { TXT, getLocaleMessage } from "./utils/locale";
-import {
-  CHAT_STATUS_PROCESSING,
-  ChatTask,
-  Message,
-  PromptTemplate,
-  Reference,
-} from "./utils/message";
+import { CHAT_STATUS_EMPTY, ChatTask, Message, PromptTemplate, Reference } from "./utils/message";
 
 export const Assistant = () => {
   const [UILanguage, setUILanguage] = useSyncStorage<string>("UILanguage", "en");
@@ -45,7 +39,7 @@ export const Assistant = () => {
   const [history, setHistory] = useLocalStorage<Message[]>("chatHistory", []);
   const [references, setReferences] = useLocalStorage<Reference[]>("references", []);
   const [chatTask, setChatTask] = useState<ChatTask | null>(null);
-  const [chatStatus, setChatStatus] = useState("");
+  const [chatStatus, setChatStatus] = useState(CHAT_STATUS_EMPTY);
   const [openGeneralSettings, setOpenGeneralSettings] = useState(false);
   const [openPromptSettings, setOpenPromptSettings] = useState(false);
   const [openModelSettings, setOpenModelSettings] = useState(false);
@@ -116,7 +110,8 @@ export const Assistant = () => {
 
   const clearAll = () => {
     setHistory([]);
-    setChatStatus("");
+    setChatTask(null);
+    setChatStatus(CHAT_STATUS_EMPTY);
     setReferences([]);
   };
 
@@ -233,7 +228,6 @@ export const Assistant = () => {
 
         <div id="chat_input">
           <ChatInput
-            enabled={chatStatus !== CHAT_STATUS_PROCESSING && currentModel !== null}
             allModels={allModels}
             allProviders={allProviders}
             providerConfigs={providerConfigs}
@@ -247,7 +241,14 @@ export const Assistant = () => {
   );
 
   return (
-    <ChatContext.Provider value={{ chatStatus, setChatStatus, chatTask, setChatTask }}>
+    <ChatContext.Provider
+      value={{
+        chatStatus,
+        setChatStatus,
+        chatTask,
+        setChatTask,
+      }}
+    >
       <LocaleContext.Provider value={{ displayText: displayText }}>
         {content}
       </LocaleContext.Provider>

@@ -20,8 +20,9 @@ export const callGemini = async (
   model: Model,
   temperature: number,
   messages: Message[],
-  onContent: (_: string) => void,
-  onFinish: (_?: string) => void
+  chatId: string,
+  onContent: (chatId: string, content: string) => void,
+  onFinish: (chatId: string, error?: string) => void
 ) => {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -42,11 +43,11 @@ export const callGemini = async (
     const result = await chat.sendMessageStream(messages[messages.length - 1].content);
     for await (const chunk of result.stream) {
       const text = chunk.text();
-      onContent(text);
+      onContent(chatId, text);
       console.debug("receive chunk:", text);
     }
-    onFinish();
+    onFinish(chatId);
   } catch (error) {
-    onFinish(error?.toString());
+    onFinish(chatId, error?.toString());
   }
 };

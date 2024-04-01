@@ -7,15 +7,22 @@ import {
 } from "@ant-design/icons";
 import { Button, Col, Row } from "antd";
 import markdownit from "markdown-it";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { callClaude } from "../utils/anthropic_api";
 import { ModelAndProvider, ProviderConfig } from "../utils/config";
 import { callGemini } from "../utils/google_api";
 import { TXT } from "../utils/locale";
-import { CHAT_STATUS_PROCESSING, Message, Reference } from "../utils/message";
+import {
+  CHAT_STATUS_EMPTY,
+  CHAT_STATUS_PROCESSING,
+  ChatTask,
+  Message,
+  Reference,
+} from "../utils/message";
 import { callOpenAIApi } from "../utils/openai_api";
 import { getCurrentSelection } from "../utils/page_content";
 import { ChatContext } from "./chat_context";
+import { BlankDiv } from "./common";
 import { LocaleContext } from "./locale_context";
 import { addPageToReference } from "./references";
 
@@ -39,18 +46,17 @@ export const ChatSession = ({
   setHistory: (history: Message[]) => void;
 }) => {
   const [currentAnswer, setCurrentAnswer] = useState("");
-  const [round, setRound] = useState(0);
   const [collpasedIndexes, setCollapsedIndexes] = useState<Set<number>>(new Set());
   const { displayText } = useContext(LocaleContext)!;
   const { chatTask, setChatTask, chatStatus, setChatStatus } = useContext(ChatContext)!;
-
+  const chatTaskRef = useRef(chatTask);
   const md = markdownit();
 
   useEffect(() => {
     if (!currentAnswer) {
       return;
     }
-    console.debug(`update history on answer change of round ${round}`);
+    console.debug(`update history on answer change for task ${chatTask?.id}`);
     if (history.length > 0) {
       const lastMsg = history[history.length - 1];
       if (lastMsg.role === "assistant") {
@@ -60,7 +66,7 @@ export const ChatSession = ({
         ]);
       }
     }
-  }, [currentAnswer, round]);
+  }, [currentAnswer, chatTask]);
 
   useEffect(() => {
     if (history.length === 0) {
@@ -68,17 +74,25 @@ export const ChatSession = ({
     }
   }, [history]);
 
-  const onResponseContent = (content: string) => {
-    console.debug("on response content");
-    setCurrentAnswer((answer) => answer + content);
+  const onResponseContent = (chatId: string, content: string) => {
+    if (chatId === chatTaskRef.current?.id) {
+      console.debug(`on response content, chatId=${chatId}`);
+      setCurrentAnswer((answer) => answer + content);
+    } else {
+      console.debug(`on response content, chatId=${chatId}, but current chatId=${chatTask?.id}`);
+    }
   };
 
-  const onResponseFinish = (errorMsg: string = "") => {
-    console.log("on response finish, errorMsg=", errorMsg);
-    if (errorMsg) {
-      setCurrentAnswer((answer) => answer + ` [ERROR]:${errorMsg}`);
+  const onResponseFinish = (chatId: string, errorMsg: string = "") => {
+    if (chatId === chatTaskRef.current?.id) {
+      console.log(`on response finish, chatId=${chatId}, errorMsg=${errorMsg}`);
+      if (errorMsg) {
+        setCurrentAnswer((answer) => answer + ` [ERROR]:${errorMsg}`);
+      }
+      finishChatTask(CHAT_STATUS_EMPTY);
+    } else {
+      console.log(`on response finish, chatId=${chatId}, but current chatId=${chatTask?.id}`);
     }
-    setChatStatus("");
   };
 
   const getSystemMessage = (context_references: Reference[]) => {
@@ -106,26 +120,45 @@ export const ChatSession = ({
     return messages;
   };
 
+  const finishChatTask = (status: string) => {
+    setChatStatus(status);
+    setChatTask(null);
+  };
+
   const chatWithAI = async (messages: Message[]) => {
     if (!currentModel) {
-      setChatStatus(`model not available`);
+      finishChatTask("model not available");
       return;
     }
     const { model, provider } = currentModel;
     const apiKey = providerConfigs[provider.id]?.apiKey;
     if (!apiKey) {
-      setChatStatus(`api key of ${provider.name}:${model.name} not found`);
+      finishChatTask(`api key of ${provider.name}:${model.name} not found`);
       return;
     }
 
     setCurrentAnswer("");
-    setRound((round) => round + 1);
-    setChatStatus(CHAT_STATUS_PROCESSING);
 
     if (provider.apiType === "Google") {
-      callGemini(apiKey, model, temperature, messages, onResponseContent, onResponseFinish);
+      callGemini(
+        apiKey,
+        model,
+        temperature,
+        messages,
+        chatTask!.id,
+        onResponseContent,
+        onResponseFinish
+      );
     } else if (provider.apiType === "Anthropic") {
-      callClaude(apiKey, model, temperature, messages, onResponseContent, onResponseFinish);
+      callClaude(
+        apiKey,
+        model,
+        temperature,
+        messages,
+        chatTask!.id,
+        onResponseContent,
+        onResponseFinish
+      );
     } else {
       callOpenAIApi(
         provider,
@@ -133,6 +166,7 @@ export const ChatSession = ({
         model,
         temperature,
         messages,
+        chatTask!.id,
         onResponseContent,
         onResponseFinish
       );
@@ -146,18 +180,21 @@ export const ChatSession = ({
 
   // handle chat task change
   useEffect(() => {
+    console.log("chat task=", chatTask);
+    chatTaskRef.current = chatTask;
     if (!chatTask) {
-      return;
-    }
-    setChatTask(null); // don't affect current value of chatTask
-    if (chatStatus === CHAT_STATUS_PROCESSING) {
+      if (chatStatus === CHAT_STATUS_PROCESSING) {
+        console.log("reset chat status on empty task");
+        setChatStatus(CHAT_STATUS_EMPTY);
+      }
       return;
     }
     if (!chatTask.prompt) {
-      setChatStatus("empty prompt");
+      finishChatTask("empty prompt");
       return;
     }
-    console.log("chat task=", chatTask);
+
+    setChatStatus(CHAT_STATUS_PROCESSING);
     if (chatTask.reference_type === "page") {
       addPageToReference(references, setReferences).then((pageRef) => {
         if (pageRef) {
@@ -166,7 +203,7 @@ export const ChatSession = ({
           }`;
           startChat(prompt, [pageRef]);
         } else {
-          setChatStatus("fail to get content of current page");
+          finishChatTask("fail to get content of current page");
         }
       });
     } else if (chatTask.reference_type === "selection") {
@@ -177,7 +214,7 @@ export const ChatSession = ({
           \`\`\`${selection}\`\`\`\n\n${chatTask.prompt}`;
           startChat(prompt, references);
         } else {
-          setChatStatus("fail to get selection of current page");
+          finishChatTask("fail to get selection of current page");
         }
       });
     } else {
@@ -196,14 +233,12 @@ export const ChatSession = ({
   };
 
   const redoChat = (index: number) => {
+    // FIXME: should save references for each message ?
     if (chatStatus !== CHAT_STATUS_PROCESSING && currentModel) {
-      const reply = new Message("assistant", "", currentModel.model.name, temperature);
-      // FIXME: should save references for each message ?
-      setHistory([...history.slice(0, index + 1), reply]);
-      setCollapsedIndexes(new Set([...collpasedIndexes].filter((i) => i <= index)));
-      const systemMsg = getSystemMessage(references);
-      const messages = [systemMsg, ...history.slice(0, index + 1), reply];
-      chatWithAI(messages);
+      const content = history[index].content;
+      setHistory(history.slice(0, index));
+      setCollapsedIndexes(new Set([...collpasedIndexes].filter((i) => i < index)));
+      setChatTask(new ChatTask(content, "all"));
     }
   };
 
@@ -235,13 +270,16 @@ export const ChatSession = ({
                 />
               </Col>
             </Row>
-            {!collpasedIndexes.has(index) && (
+            <BlankDiv height={4} />
+            {!collpasedIndexes.has(index) && html ? (
               <div
                 dangerouslySetInnerHTML={{ __html: html }}
                 style={{
-                  marginTop: "-8px",
+                  marginTop: "-12px",
                 }}
               />
+            ) : (
+              <BlankDiv height={4} />
             )}
           </div>
         );

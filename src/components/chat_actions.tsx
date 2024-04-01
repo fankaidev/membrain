@@ -3,7 +3,12 @@ import { Button, Flex, Tag } from "antd";
 import React, { useContext } from "react";
 
 import { TXT } from "../utils/locale";
-import { CHAT_STATUS_PROCESSING, ChatTask, PromptTemplate } from "../utils/message";
+import {
+  CHAT_STATUS_EMPTY,
+  CHAT_STATUS_PROCESSING,
+  ChatTask,
+  PromptTemplate,
+} from "../utils/message";
 import { ChatContext } from "./chat_context";
 import { LocaleContext } from "./locale_context";
 
@@ -32,19 +37,25 @@ export const ChatActions = ({ promptTemplates }: { promptTemplates: PromptTempla
     }
   }
 
-  return (
-    <>
-      {chatStatus === CHAT_STATUS_PROCESSING && (
+  const displayTag = () => {
+    if (chatStatus === CHAT_STATUS_PROCESSING) {
+      return (
         <Tag icon={<SyncOutlined spin />} color="processing" style={{ margin: "8px" }}>
-          {chatStatus}
+          processing
         </Tag>
-      )}
-      {chatStatus && chatStatus !== CHAT_STATUS_PROCESSING && (
+      );
+    } else if (chatStatus !== CHAT_STATUS_EMPTY) {
+      return (
         <Tag icon={<InfoCircleOutlined />} color="error" style={{ margin: "8px" }}>
           {chatStatus}
         </Tag>
-      )}
-      {chatStatus !== CHAT_STATUS_PROCESSING && (
+      );
+    }
+  };
+
+  const displayActions = () => {
+    if (chatStatus !== CHAT_STATUS_PROCESSING) {
+      return (
         <Flex id="actions" wrap="wrap" gap="small" style={{ margin: "8px" }}>
           {chatTasks.map(([title, task], index) => (
             <Button
@@ -58,7 +69,13 @@ export const ChatActions = ({ promptTemplates }: { promptTemplates: PromptTempla
             </Button>
           ))}
         </Flex>
-      )}
+      );
+    }
+  };
+  return (
+    <>
+      {displayTag()}
+      {displayActions()}
     </>
   );
 };

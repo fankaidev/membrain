@@ -54,6 +54,7 @@ export const Assistant = () => {
     []
   );
   const [customModels, setCustomModels] = useSyncStorage<Model[]>("customModels", []);
+  const [temperature, setTemperature] = useSyncStorage<number>("modelTemperature", 0.3);
   const [customProviders, setCustomProviders] = useSyncStorage<ModelProvider[]>(
     "customProviders",
     []
@@ -123,7 +124,7 @@ export const Assistant = () => {
     return (
       <>
         <Drawer
-          title={displayText("tooltip_generalSettings")}
+          title={displayText(TXT.PAGE_GENERAL_SETTINGS)}
           onClose={() => setOpenGeneralSettings(false)}
           open={openGeneralSettings}
           keyboard={false}
@@ -136,7 +137,7 @@ export const Assistant = () => {
           />
         </Drawer>
         <Drawer
-          title={displayText("tooltip_promptSettings")}
+          title={displayText(TXT.PAGE_PROMPT_SETTINGS)}
           onClose={() => setOpenPromptSettings(false)}
           open={openPromptSettings}
           keyboard={false}
@@ -147,7 +148,7 @@ export const Assistant = () => {
           />
         </Drawer>
         <Drawer
-          title={displayText("tooltip_modelSettings")}
+          title={displayText(TXT.PAGE_MODEL_SETTINGS)}
           onClose={() => setOpenModelSettings(false)}
           open={openModelSettings}
           keyboard={false}
@@ -159,6 +160,8 @@ export const Assistant = () => {
             setCustomModels={setCustomModels}
             customProviders={customProviders}
             setCustomProviders={setCustomProviders}
+            temperature={temperature}
+            setTemperature={setTemperature}
           />
         </Drawer>
       </>
@@ -167,7 +170,7 @@ export const Assistant = () => {
   const content = (
     <>
       {settings()}
-      <Flex vertical justify="start" style={{ height: "100%" }}>
+      <Flex vertical justify="start" style={{ height: "100%", gap: "8px" }}>
         <Row id="settings">
           <Col span={22}>
             <IconButton
@@ -200,7 +203,7 @@ export const Assistant = () => {
           </Col>
         </Row>
 
-        <div id="references" style={{ padding: "4px 0px 4px 0px" }}>
+        <div id="references">
           <ReferenceBox references={references} setReferences={setReferences} />
         </div>
 
@@ -213,13 +216,13 @@ export const Assistant = () => {
             borderStyle: "solid none solid none",
             borderWidth: "1px",
             borderColor: "WhiteSmoke",
-            padding: "4px 0px 4px 0px",
           }}
         >
           <ChatSession
             chatLanguage={chatLanguage}
             currentModel={currentModel}
             providerConfigs={providerConfigs}
+            temperature={temperature}
             references={references}
             setReferences={setReferences}
             history={history}
@@ -228,7 +231,7 @@ export const Assistant = () => {
           <ChatActions promptTemplates={promptTemplates} />
         </div>
 
-        <div id="chat_input" style={{ padding: "4px 0px 4px 0px" }}>
+        <div id="chat_input">
           <ChatInput
             enabled={chatStatus !== CHAT_STATUS_PROCESSING && currentModel !== null}
             allModels={allModels}

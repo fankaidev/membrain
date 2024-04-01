@@ -31,6 +31,8 @@ describe("ModelSettings Component", () => {
       new ModelProvider("Tesla", "OpenAI", "https://api.tesla.com", "tesla"),
     ];
     let setCustomProviders = jest.fn();
+    let temperature = 0.3;
+    let setTemperature = jest.fn();
     render(
       <LocaleContext.Provider value={{ displayText: (txt: string) => getLocaleMessage("en", txt) }}>
         <ModelSettings
@@ -40,6 +42,8 @@ describe("ModelSettings Component", () => {
           setCustomModels={setCustomModels}
           customProviders={customProviders}
           setCustomProviders={setCustomProviders}
+          temperature={temperature}
+          setTemperature={setTemperature}
         />
       </LocaleContext.Provider>
     );

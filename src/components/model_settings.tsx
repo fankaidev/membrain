@@ -1,5 +1,17 @@
 import { EditOutlined, PlusCircleOutlined } from "@ant-design/icons";
-import { Button, Col, Divider, Form, Input, Modal, Row, Select, Switch } from "antd";
+import {
+  Button,
+  Col,
+  Divider,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Row,
+  Select,
+  Slider,
+  Switch,
+} from "antd";
 import React, { useContext, useState } from "react";
 import {
   Model,
@@ -20,6 +32,8 @@ export const ModelSettings = ({
   setCustomModels,
   customProviders,
   setCustomProviders,
+  temperature,
+  setTemperature,
 }: {
   providerConfigs: Record<string, ProviderConfig>;
   setProviderConfigs: (values: Record<string, ProviderConfig>) => void;
@@ -27,6 +41,8 @@ export const ModelSettings = ({
   setCustomModels: (models: Model[]) => void;
   customProviders: ModelProvider[];
   setCustomProviders: (providers: ModelProvider[]) => void;
+  temperature: number;
+  setTemperature: (value: number) => void;
 }) => {
   const [openProviderModal, setOpenProviderModal] = useState(false);
   const [editingProvider, setEditingProvider] = useState<ModelProvider | null>(null);
@@ -158,7 +174,7 @@ export const ModelSettings = ({
         style={{ width: "100%" }}
         align={"middle"}
       >
-        <Col span={16} style={{ lineHeight: "2" }}>
+        <Col span={16}>
           <b>{provider.name}</b>
         </Col>
         <Col span={2} offset={1}>
@@ -192,10 +208,8 @@ export const ModelSettings = ({
     };
 
     return (
-      <Row key={model.id} style={{ width: "100%" }} data-testid={`model_${model.name}`}>
-        <Col span={20} style={{ lineHeight: "2" }}>
-          {model.name}
-        </Col>
+      <Row key={model.id} style={{ paddingLeft: "4px" }} data-testid={`model_${model.name}`}>
+        <Col span={20}>{model.name}</Col>
         <Col span={2}>
           {customModels.includes(model) && (
             <EditOutlined onClick={() => startEditingModel(provider, model)} />
@@ -336,11 +350,31 @@ export const ModelSettings = ({
 
   return (
     <>
-      {allProviders.map((provider) => displayProviderSettings(provider))}
       {displayModelModal()}
       {displayProviderModal()}
+      <h2>{displayText(TXT.LABEL_MODELS)}</h2>
+      <BlankDiv />
+      {allProviders.map((provider) => displayProviderSettings(provider))}
       <Row justify="center">
         <Button onClick={startAddingProvider}>{displayText(TXT.ACTION_CONF_ADD_PROVIDER)}</Button>
+      </Row>
+      <Divider />
+      <h2>{displayText(TXT.LABEL_MODEL_TEMP)}</h2>
+      <BlankDiv />
+      <Row justify="center">
+        <Col span={12}>
+          <Slider min={0} max={1} step={0.1} onChange={setTemperature} value={temperature} />
+        </Col>
+        <Col span={8} offset={1}>
+          <InputNumber
+            min={0}
+            max={1}
+            step={0.1}
+            onChange={(val) => setTemperature(val || 0.3)}
+            value={temperature}
+            style={{ width: "60px" }}
+          />
+        </Col>
       </Row>
     </>
   );

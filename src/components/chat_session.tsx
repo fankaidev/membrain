@@ -22,6 +22,7 @@ import { addPageToReference } from "./references";
 export const ChatSession = ({
   chatLanguage,
   currentModel,
+  temperature,
   providerConfigs,
   references,
   history,
@@ -30,6 +31,7 @@ export const ChatSession = ({
 }: {
   chatLanguage: string;
   currentModel: ModelAndProvider | null;
+  temperature: number;
   providerConfigs: Record<string, ProviderConfig>;
   references: Reference[];
   history: Message[];
@@ -54,7 +56,7 @@ export const ChatSession = ({
       if (lastMsg.role === "assistant") {
         setHistory([
           ...history.slice(0, -1),
-          new Message(lastMsg.role, currentAnswer, lastMsg.model),
+          new Message(lastMsg.role, currentAnswer, lastMsg.model, temperature),
         ]);
       }
     }
@@ -81,7 +83,7 @@ export const ChatSession = ({
 
   const initMessages = (content: string, context_references: Reference[]) => {
     const query = new Message("user", content);
-    const reply = new Message("assistant", "", currentModel?.model.name);
+    const reply = new Message("assistant", "", currentModel?.model.name, temperature);
     let systemPrompt = `You are a smart assistant, please try to answer user's questions as accurately as possible.
     You should use following language to communicate with user: \`${chatLanguage}\` \n`;
     if (context_references.length > 0) {
@@ -117,11 +119,19 @@ export const ChatSession = ({
     setChatStatus(CHAT_STATUS_PROCESSING);
 
     if (provider.apiType === "Google") {
-      callGemini(apiKey, model, messages, onResponseContent, onResponseFinish);
+      callGemini(apiKey, model, temperature, messages, onResponseContent, onResponseFinish);
     } else if (provider.apiType === "Anthropic") {
-      callClaude(apiKey, model, messages, onResponseContent, onResponseFinish);
+      callClaude(apiKey, model, temperature, messages, onResponseContent, onResponseFinish);
     } else {
-      callOpenAIApi(provider, apiKey, model, messages, onResponseContent, onResponseFinish);
+      callOpenAIApi(
+        provider,
+        apiKey,
+        model,
+        temperature,
+        messages,
+        onResponseContent,
+        onResponseFinish
+      );
     }
   };
 
@@ -183,7 +193,7 @@ export const ChatSession = ({
 
   const redoChat = (index: number) => {
     if (chatStatus !== CHAT_STATUS_PROCESSING && currentModel) {
-      const reply = new Message("assistant", "", currentModel.model.name);
+      const reply = new Message("assistant", "", currentModel.model.name, temperature);
       const messages = [...history.slice(0, index + 1), reply];
       setHistory(messages);
       setCollapsedIndexes(new Set([...collpasedIndexes].filter((i) => i <= index)));

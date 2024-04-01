@@ -55,11 +55,12 @@ export const callOpenAIApi = async (
   provider: ModelProvider,
   apiKey: string,
   model: Model,
+  temperature: number,
   query_messages: Message[],
   onContent: (_: string) => void,
   onFinish: (_?: string) => void
 ) => {
   // TODO: calculate remaining max output tokens
-  const data = prepareChatData(query_messages, model.name, 0.3, model.maxOutput / 2);
+  const data = prepareChatData(query_messages, model.name, temperature, model.maxOutput / 2);
   callModel(apiKey, provider.endpoint, data, onFinish, onContent);
 };

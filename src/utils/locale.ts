@@ -2,6 +2,7 @@ export enum TXT {
   ACTION_CONF_ADD_MODEL = "ACTION_CONF_ADD_MODEL",
   ACTION_CONF_ADD_PROMPT_TPL = "ACTION_CONF_ADD_PROMPT_TPL",
   ACTION_CONF_ADD_PROVIDER = "ACTION_CONF_ADD_PROVIDER",
+  ACTION_CONF_SET_TEMP = "ACTION_CONF_SET_TEMP",
   ACTION_CHAT_SUMMARIZE = "ACTION_CHAT_SUMMARIZE",
   ACTION_CHAT_SUMMARIZE_PAGE = "ACTION_CHAT_SUMMARIZE_PAGE",
   ACTION_CHAT_SUMMARIZE_SELECTION = "ACTION_CHAT_SUMMARIZE_SELECTION",
@@ -17,6 +18,8 @@ export enum TXT {
   INPUT_PROMPT_PLACEHOLDER = "INPUT_PROMPT_PLACEHOLDER",
   LABEL_LANG_CHAT = "LABEL_LANG_CHAT",
   LABEL_LANG_UI = "LABEL_LANG_UI",
+  LABEL_MODELS = "LABEL_MODEL_PROVIDERS",
+  LABEL_MODEL_TEMP = "LABEL_MODEL_TEMP",
   LABEL_MAX_CONTEXT = "LABEL_MAX_TOKENS",
   LABEL_MAX_OUTPUT = "LABEL_MAX_OUTPUT",
   LABEL_NAME = "LABEL_NAME",
@@ -47,6 +50,8 @@ const MESSAGES: { [locale: string]: { [key: string]: string } } = {
     [TXT.LABEL_REF_TYPE_SELECTION]: "Selection",
     [TXT.LABEL_LANG_UI]: "UI Languages",
     [TXT.LABEL_LANG_CHAT]: "Chat Languages",
+    [TXT.LABEL_MODELS]: "Models",
+    [TXT.LABEL_MODEL_TEMP]: "Model Temperature",
     [TXT.LABEL_MAX_CONTEXT]: "Max Context Tokens",
     [TXT.LABEL_MAX_OUTPUT]: "Max Output Tokens",
     [TXT.ACTION_CHAT_SUMMARIZE]: "Summarize",
@@ -86,13 +91,15 @@ const MESSAGES: { [locale: string]: { [key: string]: string } } = {
     [TXT.LABEL_REF_TYPE_SELECTION]: "当前选中内容",
     [TXT.LABEL_LANG_UI]: "界面语言",
     [TXT.LABEL_LANG_CHAT]: "对话语言",
+    [TXT.LABEL_MODELS]: "模型",
+    [TXT.LABEL_MODEL_TEMP]: "模型温度",
     [TXT.LABEL_MAX_CONTEXT]: "最大上下文token数",
     [TXT.LABEL_MAX_OUTPUT]: "最大返回token数",
     [TXT.ACTION_CHAT_SUMMARIZE]: "总结资料",
     [TXT.ACTION_CHAT_SUMMARIZE_PAGE]: "总结页面",
     [TXT.ACTION_CHAT_SUMMARIZE_SELECTION]: "总结选中内容",
     [TXT.ACTION_CONF_ADD_PROMPT_TPL]: "添加自定义提示",
-    [TXT.ACTION_CONF_ADD_PROVIDER]: "添加模型服务商",
+    [TXT.ACTION_CONF_ADD_PROVIDER]: "添加模型供应商",
     [TXT.ACTION_CONF_ADD_MODEL]: "添加模型",
     [TXT.ACTION_FORM_CANCEL]: "取消",
     [TXT.ACTION_FORM_DELETE]: "删除",
@@ -118,7 +125,7 @@ const MESSAGES: { [locale: string]: { [key: string]: string } } = {
 };
 
 export const getLocaleMessage = (locale: string, key: string): string => {
-  return MESSAGES[locale][key] || MESSAGES["en"][key];
+  return MESSAGES[locale][key] || MESSAGES["en"][key] || key;
 };
 
 export const UI_LANGUAGES = [

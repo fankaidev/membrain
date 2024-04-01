@@ -4,11 +4,13 @@ export class Message {
   role: string;
   content: string;
   model: string;
+  temperature: number;
 
-  constructor(role: string, content: string, model: string = "") {
+  constructor(role: string, content: string, model: string = "", temperature: number = -1) {
     this.role = role;
     this.content = content;
     this.model = model;
+    this.temperature = temperature;
   }
 }
 

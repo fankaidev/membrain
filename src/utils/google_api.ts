@@ -18,6 +18,7 @@ function prepareHistory(messages: Message[]) {
 export const callGemini = async (
   apiKey: string,
   model: Model,
+  temperature: number,
   messages: Message[],
   onContent: (_: string) => void,
   onFinish: (_?: string) => void
@@ -35,6 +36,7 @@ export const callGemini = async (
       history,
       generationConfig: {
         maxOutputTokens: model.maxOutput / 2,
+        temperature: temperature,
       },
     });
     const result = await chat.sendMessageStream(messages[messages.length - 1].content);

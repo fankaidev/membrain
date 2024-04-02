@@ -38,3 +38,16 @@ export function useSyncStorage<T>(key: string, defaultValue: T): [T, (value: T) 
 export function useLocalStorage<T>(key: string, defaultValue: T): [T, (value: T) => void] {
   return useStorage("local", key, defaultValue);
 }
+
+export async function getFromStorage<T>(areaName: string, keyInArea: string, defaultValue: T) {
+  const area = areaName === "sync" ? chrome.storage.sync : chrome.storage.local;
+  const key = `${areaName}:${keyInArea}`;
+  const data = await area.get([key]);
+  return data[key] ? (JSON.parse(data[key]) as T) : defaultValue;
+}
+
+export async function saveToStorage<T>(areaName: string, keyInArea: string, value: T) {
+  const area = areaName === "sync" ? chrome.storage.sync : chrome.storage.local;
+  const key = `${areaName}:${keyInArea}`;
+  area.set({ [key]: JSON.stringify(value) });
+}

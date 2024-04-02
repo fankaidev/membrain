@@ -15,9 +15,10 @@ import { IconButton } from "./components/icon_button";
 import { LocaleContext } from "./components/locale_context";
 import { ModelSettings } from "./components/model_settings";
 import { PromptSettings } from "./components/prompt_settings";
-import { ReferenceBox, addPageToReference } from "./components/references";
+import { ReferenceBox } from "./components/references";
 import { GeneralSettings } from "./components/settings";
 import { useLocalStorage, useSyncStorage } from "./hooks/useStorage";
+import { useChatReferenceStore } from "./logic/reference_store";
 import {
   Model,
   ModelAndProvider,
@@ -30,14 +31,13 @@ import {
   WA_MESSAGE_TYPE_MENU_TASK,
 } from "./utils/config";
 import { TXT, getLocaleMessage } from "./utils/locale";
-import { CHAT_STATUS_EMPTY, ChatTask, Message, PromptTemplate, Reference } from "./utils/message";
+import { CHAT_STATUS_EMPTY, ChatTask, Message, PromptTemplate } from "./utils/message";
 
 export const Assistant = () => {
   const [UILanguage, setUILanguage] = useSyncStorage<string>("UILanguage", "en");
   const [chatLanguage, setChatLanguage] = useSyncStorage<string>("chatLanguage", "English");
   const [currentModel, setCurrentModel] = useState<ModelAndProvider | null>(null);
   const [history, setHistory] = useLocalStorage<Message[]>("chatHistory", []);
-  const [references, setReferences] = useLocalStorage<Reference[]>("references", []);
   const [chatTask, setChatTask] = useState<ChatTask | null>(null);
   const [chatStatus, setChatStatus] = useState(CHAT_STATUS_EMPTY);
   const [openGeneralSettings, setOpenGeneralSettings] = useState(false);
@@ -60,6 +60,7 @@ export const Assistant = () => {
   const chatBoxRef = useRef(null);
   const allModels = [...SYSTEM_MODELS, ...customModels];
   const allProviders = [...SYSTEM_PROVIDERS, ...customProviders];
+  const { addPageRef, clearReferences } = useChatReferenceStore();
 
   const displayText = (text: string) => {
     return getLocaleMessage(UILanguage, text);
@@ -77,7 +78,7 @@ export const Assistant = () => {
       return;
     }
     chrome.storage.local.set({ menuTask: null });
-    const pageRef = await addPageToReference(references, setReferences);
+    const pageRef = await addPageRef();
     if (!pageRef) {
       console.error("fail to get current page");
     } else if (menuTask.name === WA_MENU_TASK_SUMMARIZE_PAGE) {
@@ -112,7 +113,7 @@ export const Assistant = () => {
     setHistory([]);
     setChatTask(null);
     setChatStatus(CHAT_STATUS_EMPTY);
-    setReferences([]);
+    clearReferences();
   };
 
   const settings = () => {
@@ -199,7 +200,7 @@ export const Assistant = () => {
         </Row>
 
         <div id="references">
-          <ReferenceBox references={references} setReferences={setReferences} />
+          <ReferenceBox />
         </div>
 
         <div
@@ -218,8 +219,6 @@ export const Assistant = () => {
             currentModel={currentModel}
             providerConfigs={providerConfigs}
             temperature={temperature}
-            references={references}
-            setReferences={setReferences}
             history={history}
             setHistory={setHistory}
           />

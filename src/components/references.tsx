@@ -6,38 +6,32 @@ import {
 } from "@ant-design/icons";
 import { Collapse, Flex, Tag } from "antd";
 import markdownit from "markdown-it";
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
+import { getFromStorage, saveToStorage } from "../hooks/useStorage";
+import { useChatReferenceStore } from "../logic/reference_store";
 import { TXT } from "../utils/locale";
 import { Reference } from "../utils/message";
-import { getCurrentPageRef, getCurrentSelectionRef } from "../utils/page_content";
 import { BlankDiv } from "./common";
 import { IconButton } from "./icon_button";
 import { LocaleContext } from "./locale_context";
 
-export const addPageToReference = async (
-  references: Reference[],
-  setReferences: (value: Reference[]) => void
-): Promise<Reference | null> => {
-  const pageRef = await getCurrentPageRef();
-  if (!pageRef) {
-    return null;
-  }
+export const ReferenceBox = ({}: {}) => {
+  const { references, addPageRef, addSelectionRef, removeReference, clearReferences } =
+    useChatReferenceStore();
 
-  if (references.filter((r) => r.type === "webpage" && r.url === pageRef.url).length === 0) {
-    setReferences([...references, pageRef]);
-  } else {
-    console.debug("skip adding existing reference");
-  }
-  return pageRef;
-};
+  useEffect(() => {
+    getFromStorage("local", "references", []).then((references) => {
+      useChatReferenceStore.setState({ references });
+    });
+  }, []);
 
-export const ReferenceBox = ({
-  references,
-  setReferences,
-}: {
-  references: Reference[];
-  setReferences: (value: Reference[]) => void;
-}) => {
+  useChatReferenceStore(() => {
+    useEffect(() => {
+      console.log("update refs");
+      saveToStorage("local", "references", references);
+    }, [references]);
+  });
+
   const md = markdownit();
 
   const ellipse = (text: string, limit: number = 70) => {
@@ -52,14 +46,6 @@ export const ReferenceBox = ({
     }
 
     return ret;
-  };
-
-  const clearReferences = () => {
-    setReferences([]);
-  };
-
-  const removeReference = (id: string) => {
-    setReferences(references.filter((r) => r.id !== id));
   };
 
   const displayReferences = () => {
@@ -99,16 +85,6 @@ export const ReferenceBox = ({
     return <Collapse style={{ width: "100%" }} items={items} />;
   };
 
-  const addSelectionToReference = async (): Promise<Reference | null> => {
-    const selectionRef = await getCurrentSelectionRef();
-    if (selectionRef) {
-      setReferences([...references, selectionRef]);
-      return selectionRef;
-    } else {
-      return null;
-    }
-  };
-
   const { displayText } = useContext(LocaleContext)!;
 
   return (
@@ -120,12 +96,12 @@ export const ReferenceBox = ({
         <span>
           <IconButton
             icon={<FileAddOutlined />}
-            onClick={() => addPageToReference(references, setReferences)}
+            onClick={() => addPageRef()}
             tooltip={TXT.ACTION_REF_ADD_PAGE}
           />
           <IconButton
             icon={<FileTextOutlined />}
-            onClick={addSelectionToReference}
+            onClick={addSelectionRef}
             tooltip={TXT.ACTION_REF_ADD_SELECTION}
           />
           <IconButton

@@ -94,6 +94,9 @@ devDependencies:
   jest-environment-jsdom:
     specifier: ^29.7.0
     version: 29.7.0
+  mem-storage-area:
+    specifier: ^1.0.3
+    version: 1.0.3
   prettier:
     specifier: ^2.8.8
     version: 2.8.8
@@ -3509,6 +3512,10 @@ packages:
   /mdurl@2.0.0:
     resolution: {integrity: sha512-Lf+9+2r+Tdp5wXDXC4PcIBjTDtq4UKjCPMQhKIuzpJNW0b96kVqSwW0bT7FhRSfmAiFYgP+SCRvdrDozfh0U5w==}
     dev: false
+
+  /mem-storage-area@1.0.3:
+    resolution: {integrity: sha512-UwDsIj6Fmml8NPiPp7QGJavwZVbXMFLvVDfshv3486KQHDcxOExr0od4YkUdJVWFlujZxtct59mEtsPvAQTOMQ==}
+    dev: true
 
   /memory-fs@0.5.0:
     resolution: {integrity: sha512-jA0rdU5KoQMC0e6ppoNRtpp6vjFq6+NY7r8hywnC7V+1Xj/MtHwGIbB1QaK/dunyjWteJzmkpd7ooeWg10T7GA==}

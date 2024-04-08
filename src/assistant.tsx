@@ -17,8 +17,8 @@ import { ModelSettings } from "./components/model_settings";
 import { PromptSettings } from "./components/prompt_settings";
 import { ReferenceBox } from "./components/references";
 import { GeneralSettings } from "./components/settings";
-import { useLocalStorage, useSyncStorage } from "./hooks/useStorage";
-import { useChatReferenceStore } from "./logic/reference_store";
+import { useReferenceStore } from "./logic/reference_state";
+import { useLocalStorage, useSyncStorage } from "./logic/useStorage";
 import {
   Model,
   ModelAndProvider,
@@ -60,7 +60,7 @@ export const Assistant = () => {
   const chatBoxRef = useRef(null);
   const allModels = [...SYSTEM_MODELS, ...customModels];
   const allProviders = [...SYSTEM_PROVIDERS, ...customProviders];
-  const { addPageRef, clearReferences } = useChatReferenceStore();
+  const { addPageRef, clear: clearReferences } = useReferenceStore();
 
   const displayText = (text: string) => {
     return getLocaleMessage(UILanguage, text);

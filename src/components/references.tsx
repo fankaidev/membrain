@@ -7,8 +7,8 @@ import {
 import { Collapse, Flex, Tag } from "antd";
 import markdownit from "markdown-it";
 import React, { useContext, useEffect } from "react";
-import { getFromStorage, saveToStorage } from "../hooks/useStorage";
-import { useChatReferenceStore } from "../logic/reference_store";
+import { useReferenceStore } from "../logic/reference_state";
+import { getFromStorage, saveToStorage } from "../logic/useStorage";
 import { TXT } from "../utils/locale";
 import { Reference } from "../utils/message";
 import { BlankDiv } from "./common";
@@ -16,23 +16,21 @@ import { IconButton } from "./icon_button";
 import { LocaleContext } from "./locale_context";
 
 export const ReferenceBox = ({}: {}) => {
-  const { references, addPageRef, addSelectionRef, removeReference, clearReferences } =
-    useChatReferenceStore();
+  const md = markdownit();
+  const { references, addPageRef, addSelectionRef, removeRef, clear } = useReferenceStore();
 
   useEffect(() => {
+    console.debug("load references");
     getFromStorage("local", "references", []).then((references) => {
-      useChatReferenceStore.setState({ references });
+      console.debug("load references2");
+      useReferenceStore.setState({ references });
     });
   }, []);
 
-  useChatReferenceStore(() => {
-    useEffect(() => {
-      console.log("update refs");
-      saveToStorage("local", "references", references);
-    }, [references]);
-  });
-
-  const md = markdownit();
+  useEffect(() => {
+    console.debug("save references", references);
+    saveToStorage("local", "references", references);
+  }, [references]);
 
   const ellipse = (text: string, limit: number = 70) => {
     let ret = "";
@@ -54,7 +52,7 @@ export const ReferenceBox = ({}: {}) => {
         <DeleteOutlined
           onClick={(event: React.MouseEvent) => {
             event.stopPropagation();
-            removeReference(ref.id);
+            removeRef(ref.id);
           }}
         />
       );

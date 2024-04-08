@@ -8,7 +8,7 @@ import {
 import { Button, Col, Row } from "antd";
 import markdownit from "markdown-it";
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { useChatReferenceStore } from "../logic/reference_store";
+import { useReferenceStore } from "../logic/reference_state";
 import { callClaude } from "../utils/anthropic_api";
 import { ModelAndProvider, ProviderConfig } from "../utils/config";
 import { callGemini } from "../utils/google_api";
@@ -46,7 +46,7 @@ export const ChatSession = ({
   const { displayText } = useContext(LocaleContext)!;
   const { chatTask, setChatTask, chatStatus, setChatStatus } = useContext(ChatContext)!;
   const chatTaskRef = useRef(chatTask);
-  const { references, addPageRef } = useChatReferenceStore();
+  const { references, addPageRef } = useReferenceStore();
   const md = markdownit();
 
   useEffect(() => {

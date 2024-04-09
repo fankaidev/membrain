@@ -39,6 +39,7 @@ export const useReferenceStore = create<ChatReferenceStore>((set, get) => ({
       return null;
     }
 
+    console.log("sss", selectionRef);
     const state = get();
     const result = [...state.references, selectionRef];
     set({ references: result });

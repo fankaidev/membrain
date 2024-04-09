@@ -1,2 +1,2 @@
-pnpm style
-pnpm test
+#!/usr/bin/env sh
+. "${0%/*}/h"

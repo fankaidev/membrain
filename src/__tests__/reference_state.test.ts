@@ -4,17 +4,16 @@ const storageMock = (() => {
   return {
     set: jest.fn((items, callback = () => {}) => {
       return new Promise<void>((resolve) => {
-        console.log("set items", items);
         Object.keys(items).forEach((key) => {
           storage[key] = items[key];
         });
+        console.log("set items", items);
         callback();
         resolve();
       });
     }),
     get: jest.fn(async (keys, callback = () => {}) => {
       return new Promise<{ [key: string]: string }>((resolve) => {
-        console.log("get keys", keys);
         const items: { [key: string]: string } = {};
         if (typeof keys === "string") {
           items[keys] = storage[keys];
@@ -29,6 +28,7 @@ const storageMock = (() => {
             items[key] = storage[key];
           });
         }
+        console.log("get keys", keys, items);
         callback(items);
         resolve(items);
       });
@@ -43,6 +43,8 @@ globalThis.chrome = {
   storage: {
     // @ts-ignore
     local: storageMock,
+    // @ts-ignore
+    sync: storageMock,
   },
 };
 
@@ -56,94 +58,66 @@ jest.mock("../utils/page_content", () => ({
     .mockImplementation(() => Promise.resolve(new Reference("webpage", "title1", "url1", "page1"))),
   getCurrentSelectionRef: jest
     .fn()
-    .mockResolvedValue(() => new Reference("text", "title2", "url2", "text1")),
+    .mockImplementation(() => Promise.resolve(new Reference("text", "title2", "url2", "text2"))),
 }));
 
 describe("useReferenceStore", () => {
-  beforeEach(() => {
-    const { result } = renderHook(() => useReferenceStore());
-    act(() => {
-      result.current.clear();
+  beforeEach(async () => {
+    const { result: store } = renderHook(() => useReferenceStore());
+    await act(async () => {
+      await store.current.clear();
     });
   });
 
-  it("should add a page reference", async () => {
-    const { result } = renderHook(() => useReferenceStore());
-    expect(result.current.references).toEqual([]);
-
-    await act(async () => {
-      await result.current.addPageRef();
-    });
-    expect(result.current.references).toMatchSnapshot([{ title: "title1" }]);
-
-    await act(async () => {
-      await result.current.addSelectionRef();
-    });
-    expect(result.current.references).toMatchSnapshot([{ title: "title1" }, { title: "title2" }]);
-
-    // should ignore duplicate
-    await act(async () => {
-      await result.current.addPageRef();
-    });
-    console.log("result1", result.current.references);
-    expect(result.current.references).toMatchSnapshot([{ title: "title1" }, { title: "title2" }]);
+  it("when inited", () => {
+    const { result: store } = renderHook(() => useReferenceStore());
+    expect(store.current.references).toEqual([]);
   });
 
-  it("should add a selection reference", async () => {
-    const { result } = renderHook(() => useReferenceStore());
-    console.log("result2", result.current.references);
-    expect(result.current.references.length).toBe(0);
+  it("when references added", async () => {
+    const { result: store } = renderHook(() => useReferenceStore());
+
     await act(async () => {
-      await result.current.addSelectionRef();
+      await store.current.addPageRef();
     });
-    console.log("result3", result.current.references.length);
+    expect(store.current.references).toEqual(
+      expect.arrayContaining([expect.objectContaining({ url: "url1" })])
+    );
 
-    expect(result.current.references.length).toBe(1);
-
-    act(() => result.current.clear());
-    expect(result.current.references.length).toBe(0);
-  });
-
-  it("should remove a reference", async () => {
-    const { result } = renderHook(() => useReferenceStore());
     await act(async () => {
-      await result.current.addPageRef();
-      await result.current.addSelectionRef();
+      await store.current.addSelectionRef();
     });
-    const referenceToRemove = result.current.references[0];
-    act(() => {
-      result.current.removeRef(referenceToRemove.id);
-    });
+    expect(store.current.references.map((r) => r.url)).toEqual(["url1", "url2"]);
 
-    expect(result.current.references.length).toBe(1);
-    expect(result.current.references[0].id).not.toBe(referenceToRemove.id);
+    // should ignore duplicate web page
+    await act(async () => {
+      await store.current.addPageRef();
+    });
+    expect(store.current.references.map((r) => r.url)).toEqual(["url1", "url2"]);
+
+    // should add another selection
+    await act(async () => {
+      await store.current.addSelectionRef();
+    });
+    expect(store.current.references.map((r) => r.url)).toEqual(["url1", "url2", "url2"]);
   });
 
-  it("should clear all references", () => {
-    const { result } = renderHook(() => useReferenceStore());
-    act(() => {
-      result.current.addPageRef();
-      result.current.addSelectionRef();
+  it("when references removed", async () => {
+    const { result: store } = renderHook(() => useReferenceStore());
+
+    // given
+    await act(async () => {
+      await store.current.addPageRef();
+      await store.current.addSelectionRef();
     });
-    act(() => {
-      result.current.clear();
+    expect(store.current.references.map((r) => r.url)).toEqual(["url1", "url2"]);
+
+    // when
+    await act(async () => {
+      await store.current.removeRef(store.current.references[0].id);
     });
 
-    expect(result.current.references.length).toBe(0);
+    // then
+    expect(store.current.references.map((r) => r.url)).toEqual(["url2"]);
   });
-
-  // it("should load references from storage", async () => {
-  // await (async () => {
-  //   const { result } = renderHook(() => useReferenceStore());
-  //   await act(async () => {
-  //     await result.current.addPageRef();
-  //   });
-  // })();
-  // const { result } = renderHook(() => useReferenceStore());
-  // expect(result.current.references.length).toBe(0);
-  // await act(async () => {
-  //   await result.current.load();
-  // });
-  //   expect(result2.current.references.length).toBe(1);
-  // });
 });

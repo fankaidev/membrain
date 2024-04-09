@@ -45,17 +45,17 @@ export const Assistant = () => {
   const [openModelSettings, setOpenModelSettings] = useState(false);
   const [promptTemplates, setPromptTemplates] = useSyncStorage<PromptTemplate[]>(
     "promptTemplates",
-    []
+    [],
   );
   const [customModels, setCustomModels] = useSyncStorage<Model[]>("customModels", []);
   const [temperature, setTemperature] = useSyncStorage<number>("modelTemperature", 0.3);
   const [customProviders, setCustomProviders] = useSyncStorage<ModelProvider[]>(
     "customProviders",
-    []
+    [],
   );
   const [providerConfigs, setProviderConfigs] = useSyncStorage<Record<string, ProviderConfig>>(
     "providerConfigs",
-    {}
+    {},
   );
   const chatBoxRef = useRef(null);
   const allModels = [...SYSTEM_MODELS, ...customModels];
@@ -260,5 +260,5 @@ const root = createRoot(document.getElementById("root")!);
 root.render(
   <React.StrictMode>
     <Assistant />
-  </React.StrictMode>
+  </React.StrictMode>,
 );

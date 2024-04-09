@@ -34,7 +34,7 @@ export const ChatInput = ({
     .flatMap(([p, c]) =>
       allModels
         .filter((m) => m.providerId === p.id && c.enabledModels.includes(m.name))
-        .map((m) => new ModelAndProvider(m, p))
+        .map((m) => new ModelAndProvider(m, p)),
     );
 
   const isCurrentModelValid = (): boolean => {

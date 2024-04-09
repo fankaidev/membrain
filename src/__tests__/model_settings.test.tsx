@@ -45,7 +45,7 @@ describe("ModelSettings Component", () => {
           temperature={temperature}
           setTemperature={setTemperature}
         />
-      </LocaleContext.Provider>
+      </LocaleContext.Provider>,
     );
 
     const openai = screen.getByTestId("provider_OpenAI");

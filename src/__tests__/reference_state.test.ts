@@ -81,7 +81,7 @@ describe("useReferenceStore", () => {
       await store.current.addPageRef();
     });
     expect(store.current.references).toEqual(
-      expect.arrayContaining([expect.objectContaining({ url: "url1" })])
+      expect.arrayContaining([expect.objectContaining({ url: "url1" })]),
     );
 
     await act(async () => {

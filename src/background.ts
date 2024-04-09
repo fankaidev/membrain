@@ -58,7 +58,7 @@ chrome.contextMenus.onClicked.addListener(
       });
       chrome.runtime.sendMessage({ type: WA_MESSAGE_TYPE_MENU_TASK });
     }
-  }
+  },
 );
 
 chrome.runtime.onMessage.addListener(
@@ -69,5 +69,5 @@ chrome.runtime.onMessage.addListener(
         chrome.sidePanel.open({ tabId: sender.tab.id });
       }
     }
-  }
+  },
 );

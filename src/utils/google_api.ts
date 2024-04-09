@@ -22,7 +22,7 @@ export const callGemini = async (
   messages: Message[],
   chatId: string,
   onContent: (chatId: string, content: string) => void,
-  onFinish: (chatId: string, error?: string) => void
+  onFinish: (chatId: string, error?: string) => void,
 ) => {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);

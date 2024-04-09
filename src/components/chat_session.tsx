@@ -144,7 +144,7 @@ export const ChatSession = ({
         messages,
         chatTask!.id,
         onResponseContent,
-        onResponseFinish
+        onResponseFinish,
       );
     } else if (provider.apiType === "Anthropic") {
       callClaude(
@@ -154,7 +154,7 @@ export const ChatSession = ({
         messages,
         chatTask!.id,
         onResponseContent,
-        onResponseFinish
+        onResponseFinish,
       );
     } else {
       callOpenAIApi(
@@ -165,7 +165,7 @@ export const ChatSession = ({
         messages,
         chatTask!.id,
         onResponseContent,
-        onResponseFinish
+        onResponseFinish,
       );
     }
   };

@@ -6,7 +6,7 @@ function prepareChatData(
   query_messages: Message[],
   model: string,
   temperature: number,
-  max_tokens: number
+  max_tokens: number,
 ) {
   const messages = [];
   for (const message of query_messages) {
@@ -35,7 +35,7 @@ export const callOpenAIApi = async (
   query_messages: Message[],
   chatId: string,
   onContent: (chatId: string, content: string) => void,
-  onFinish: (chatId: string, error?: string) => void
+  onFinish: (chatId: string, error?: string) => void,
 ) => {
   // TODO: calculate remaining max output tokens
   const data = prepareChatData(query_messages, model.name, temperature, model.maxOutput / 2);

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 export function useStorage<T>(
   areaName: "sync" | "local",
   keyInArea: string,
-  defaultValue: T
+  defaultValue: T,
 ): [T, (value: T) => void] {
   const key = `${areaName}:${keyInArea}`;
   const [value, setValue] = useState<T>(defaultValue);

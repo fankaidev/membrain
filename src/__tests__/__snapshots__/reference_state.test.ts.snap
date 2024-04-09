@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`useReferenceStore should add a page reference 1`] = `
+[
+  {
+    "content": "page1",
+    "id": "webpage:url1",
+    "title": "title1",
+    "type": "webpage",
+    "url": "url1",
+  },
+]
+`;

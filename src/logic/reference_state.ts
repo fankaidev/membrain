@@ -7,12 +7,12 @@ export type ChatReferenceStore = {
   references: Reference[];
   addPageRef: () => Promise<Reference | null>;
   addSelectionRef: () => Promise<Reference | null>;
-  removeRef: (id: string) => void;
-  clear: () => void;
+  removeRef: (id: string) => Promise<void>;
+  clear: () => Promise<void>;
   load: () => Promise<void>;
 };
 
-export const useReferenceStore = create<ChatReferenceStore>((set) => ({
+export const useReferenceStore = create<ChatReferenceStore>((set, get) => ({
   references: [],
 
   addPageRef: async () => {
@@ -21,16 +21,15 @@ export const useReferenceStore = create<ChatReferenceStore>((set) => ({
       return null;
     }
 
-    set((state) => {
-      if (!state.references.find((r) => r.type === "webpage" && r.url === pageRef.url)) {
-        const result = [...state.references, pageRef];
-        saveToStorage("local", "references", result);
-        return { references: result };
-      } else {
-        console.debug("skip adding existing reference");
-        return state;
-      }
-    });
+    const state = get();
+    if (!state.references.find((r) => r.type === "webpage" && r.url === pageRef.url)) {
+      const result = [...state.references, pageRef];
+      set({ references: result });
+      await saveToStorage("local", "references", result);
+    } else {
+      console.debug("skip adding existing reference");
+    }
+
     return pageRef;
   },
 
@@ -40,25 +39,23 @@ export const useReferenceStore = create<ChatReferenceStore>((set) => ({
       return null;
     }
 
-    set((state) => {
-      const result = [...state.references, selectionRef];
-      saveToStorage("local", "references", result);
-      return { references: result };
-    });
+    const state = get();
+    const result = [...state.references, selectionRef];
+    set({ references: result });
+    await saveToStorage("local", "references", result);
+
     return selectionRef;
   },
 
-  removeRef: (id: string) => {
-    set((state) => {
-      const result = state.references.filter((r) => r.id !== id);
-      saveToStorage("local", "references", result);
-      return { references: result };
-    });
+  removeRef: async (id: string) => {
+    const result = get().references.filter((r) => r.id !== id);
+    set({ references: result });
+    await saveToStorage("local", "references", result);
   },
 
-  clear: () => {
+  clear: async () => {
     set({ references: [] });
-    saveToStorage("local", "references", []);
+    await saveToStorage("local", "references", []);
   },
 
   load: async () => {

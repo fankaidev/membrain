@@ -49,5 +49,5 @@ export async function getFromStorage<T>(areaName: string, keyInArea: string, def
 export async function saveToStorage<T>(areaName: string, keyInArea: string, value: T) {
   const area = areaName === "sync" ? chrome.storage.sync : chrome.storage.local;
   const key = `${areaName}:${keyInArea}`;
-  area.set({ [key]: JSON.stringify(value) });
+  await area.set({ [key]: JSON.stringify(value) });
 }

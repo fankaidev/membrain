@@ -8,6 +8,7 @@ import {
 import { Button, Col, Row } from "antd";
 import markdownit from "markdown-it";
 import React, { useContext, useEffect, useRef, useState } from "react";
+import { useChatState } from "../logic/chat_state";
 import { useReferenceState } from "../logic/reference_state";
 import { callClaude } from "../utils/anthropic_api";
 import { ModelAndProvider, ProviderConfig } from "../utils/config";
@@ -22,7 +23,6 @@ import {
 } from "../utils/message";
 import { callOpenAIApi } from "../utils/openai_api";
 import { getCurrentSelection } from "../utils/page_content";
-import { ChatContext } from "./chat_context";
 import { BlankDiv } from "./common";
 import { LocaleContext } from "./locale_context";
 
@@ -44,7 +44,7 @@ export const ChatSession = ({
   const [currentAnswer, setCurrentAnswer] = useState("");
   const [collpasedIndexes, setCollapsedIndexes] = useState<Set<number>>(new Set());
   const { displayText } = useContext(LocaleContext)!;
-  const { chatTask, setChatTask, chatStatus, setChatStatus } = useContext(ChatContext)!;
+  const { chatTask, setChatTask, chatStatus, setChatStatus } = useChatState();
   const chatTaskRef = useRef(chatTask);
   const { references, addPageRef } = useReferenceState();
   const md = markdownit();

@@ -1,10 +1,10 @@
 import { CloseCircleOutlined, DeploymentUnitOutlined, SendOutlined } from "@ant-design/icons";
 import { Button, Flex, Input, Row, Select } from "antd";
 import React, { ChangeEvent, useContext, useEffect, useState } from "react";
+import { useChatState } from "../logic/chat_state";
 import { Model, ModelAndProvider, ModelProvider, ProviderConfig } from "../utils/config";
 import { TXT } from "../utils/locale";
 import { CHAT_STATUS_PROCESSING, ChatTask } from "../utils/message";
-import { ChatContext } from "./chat_context";
 import { BlankDiv } from "./common";
 import { IconButton } from "./icon_button";
 import { LocaleContext } from "./locale_context";
@@ -26,7 +26,7 @@ export const ChatInput = ({
 }) => {
   const [userInput, setUserInput] = useState("");
   const { displayText } = useContext(LocaleContext)!;
-  const { setChatTask, chatStatus } = useContext(ChatContext)!;
+  const { setChatTask, chatStatus } = useChatState();
 
   const enabledModels: ModelAndProvider[] = allProviders
     .map((p) => [p, providerConfigs[p.id]] as [ModelProvider, ProviderConfig])

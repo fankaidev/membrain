@@ -16,7 +16,8 @@ import { LocaleContext } from "./locale_context";
 
 export const ReferenceBox = ({}: {}) => {
   const md = markdownit();
-  const { references, addPageRef, addSelectionRef, removeRef, loadReferences, clearReferences } = useReferenceState();
+  const { references, addPageRef, addSelectionRef, removeRef, loadReferences, clearReferences } =
+    useReferenceState();
 
   useEffect(() => {
     loadReferences();

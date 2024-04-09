@@ -8,7 +8,6 @@ import { Col, Drawer, Flex, Row } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ChatActions } from "./components/chat_actions";
-import { ChatContext } from "./components/chat_context";
 import { ChatInput } from "./components/chat_input";
 import { ChatSession } from "./components/chat_session";
 import { IconButton } from "./components/icon_button";
@@ -17,6 +16,7 @@ import { ModelSettings } from "./components/model_settings";
 import { PromptSettings } from "./components/prompt_settings";
 import { ReferenceBox } from "./components/references";
 import { GeneralSettings } from "./components/settings";
+import { useChatState } from "./logic/chat_state";
 import { useReferenceState } from "./logic/reference_state";
 import { useLocalStorage, useSyncStorage } from "./logic/useStorage";
 import {
@@ -38,8 +38,6 @@ export const Assistant = () => {
   const [chatLanguage, setChatLanguage] = useSyncStorage<string>("chatLanguage", "English");
   const [currentModel, setCurrentModel] = useState<ModelAndProvider | null>(null);
   const [history, setHistory] = useLocalStorage<Message[]>("chatHistory", []);
-  const [chatTask, setChatTask] = useState<ChatTask | null>(null);
-  const [chatStatus, setChatStatus] = useState(CHAT_STATUS_EMPTY);
   const [openGeneralSettings, setOpenGeneralSettings] = useState(false);
   const [openPromptSettings, setOpenPromptSettings] = useState(false);
   const [openModelSettings, setOpenModelSettings] = useState(false);
@@ -61,6 +59,7 @@ export const Assistant = () => {
   const allModels = [...SYSTEM_MODELS, ...customModels];
   const allProviders = [...SYSTEM_PROVIDERS, ...customProviders];
   const { addPageRef, clearReferences } = useReferenceState();
+  const { setChatTask, setChatStatus } = useChatState();
 
   const displayText = (text: string) => {
     return getLocaleMessage(UILanguage, text);
@@ -240,18 +239,7 @@ export const Assistant = () => {
   );
 
   return (
-    <ChatContext.Provider
-      value={{
-        chatStatus,
-        setChatStatus,
-        chatTask,
-        setChatTask,
-      }}
-    >
-      <LocaleContext.Provider value={{ displayText: displayText }}>
-        {content}
-      </LocaleContext.Provider>
-    </ChatContext.Provider>
+    <LocaleContext.Provider value={{ displayText: displayText }}>{content}</LocaleContext.Provider>
   );
 };
 

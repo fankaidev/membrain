@@ -68,10 +68,10 @@ export const ModelSettings = ({
           values.name,
           values.apiType,
           values.endpoint,
-          editingProvider.id
+          editingProvider.id,
         );
         setCustomProviders(
-          customProviders.map((p) => (p.id === editingProvider.id ? provider : p))
+          customProviders.map((p) => (p.id === editingProvider.id ? provider : p)),
         );
       } else {
         const provider = new ModelProvider(values.name, "OpenAI", values.endpoint);
@@ -94,7 +94,7 @@ export const ModelSettings = ({
           values.name,
           values.maxContext,
           values.maxOutput,
-          editingModel.id
+          editingModel.id,
         );
         setCustomModels(customModels.map((m) => (m.id === editingModel.id ? model : m)));
       } else {
@@ -102,7 +102,7 @@ export const ModelSettings = ({
           editingProvider!.id,
           values.name,
           values.maxContext,
-          values.maxOutput
+          values.maxOutput,
         );
         setCustomModels([...customModels, model]);
         const config = providerConfigs[editingProvider!.id];

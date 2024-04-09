@@ -8,6 +8,7 @@ import {
 import { Button, Col, Row } from "antd";
 import markdownit from "markdown-it";
 import React, { useContext, useEffect, useRef, useState } from "react";
+import { useReferenceState } from "../logic/reference_state";
 import { callClaude } from "../utils/anthropic_api";
 import { ModelAndProvider, ProviderConfig } from "../utils/config";
 import { callGemini } from "../utils/google_api";
@@ -24,25 +25,20 @@ import { getCurrentSelection } from "../utils/page_content";
 import { ChatContext } from "./chat_context";
 import { BlankDiv } from "./common";
 import { LocaleContext } from "./locale_context";
-import { addPageToReference } from "./references";
 
 export const ChatSession = ({
   chatLanguage,
   currentModel,
   temperature,
   providerConfigs,
-  references,
   history,
-  setReferences,
   setHistory,
 }: {
   chatLanguage: string;
   currentModel: ModelAndProvider | null;
   temperature: number;
   providerConfigs: Record<string, ProviderConfig>;
-  references: Reference[];
   history: Message[];
-  setReferences: (value: Reference[]) => void;
   setHistory: (history: Message[]) => void;
 }) => {
   const [currentAnswer, setCurrentAnswer] = useState("");
@@ -50,6 +46,7 @@ export const ChatSession = ({
   const { displayText } = useContext(LocaleContext)!;
   const { chatTask, setChatTask, chatStatus, setChatStatus } = useContext(ChatContext)!;
   const chatTaskRef = useRef(chatTask);
+  const { references, addPageRef } = useReferenceState();
   const md = markdownit();
 
   useEffect(() => {
@@ -147,7 +144,7 @@ export const ChatSession = ({
         messages,
         chatTask!.id,
         onResponseContent,
-        onResponseFinish
+        onResponseFinish,
       );
     } else if (provider.apiType === "Anthropic") {
       callClaude(
@@ -157,7 +154,7 @@ export const ChatSession = ({
         messages,
         chatTask!.id,
         onResponseContent,
-        onResponseFinish
+        onResponseFinish,
       );
     } else {
       callOpenAIApi(
@@ -168,7 +165,7 @@ export const ChatSession = ({
         messages,
         chatTask!.id,
         onResponseContent,
-        onResponseFinish
+        onResponseFinish,
       );
     }
   };
@@ -196,7 +193,7 @@ export const ChatSession = ({
 
     setChatStatus(CHAT_STATUS_PROCESSING);
     if (chatTask.reference_type === "page") {
-      addPageToReference(references, setReferences).then((pageRef) => {
+      addPageRef().then((pageRef) => {
         if (pageRef) {
           const prompt = `${displayText(TXT.PROMPT_PAGE_REF)}\n\n\`\`\`${pageRef.title}\`\`\`\n\n${
             chatTask.prompt

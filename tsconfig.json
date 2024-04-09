@@ -1,17 +1,16 @@
 {
     "compilerOptions": {
         "strict": true,
-        "target": "es6",
+        "target": "es2019",
         "moduleResolution": "bundler",
         "module": "ES6",
         "esModuleInterop": true,
         "sourceMap": false,
         "rootDir": "src",
         "outDir": "dist/js",
-        "noEmitOnError": true,
+        "noEmitOnError": false,
         "jsx": "react",
         "lib": [
-            "es6",
             "dom",
             "es2019"
         ],

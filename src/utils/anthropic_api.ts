@@ -6,7 +6,7 @@ const prepareChatData = (
   query_messages: Message[],
   model: string,
   temperature: number,
-  max_tokens: number
+  max_tokens: number,
 ) => {
   const system_msg = query_messages[0].content;
   const messages = query_messages
@@ -34,7 +34,7 @@ export const callClaude = async (
   messages: Message[],
   chatId: string,
   onContent: (chatId: string, content: string) => void,
-  onFinish: (chatId: string, error?: string) => void
+  onFinish: (chatId: string, error?: string) => void,
 ) => {
   const anthropic = new Anthropic({ apiKey });
   // TODO: calculate remaining max output tokens

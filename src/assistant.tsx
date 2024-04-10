@@ -17,8 +17,8 @@ import { PromptSettings } from "./components/prompt_settings";
 import { ReferenceBox } from "./components/references";
 import { GeneralSettings } from "./components/settings";
 import { useChatState } from "./logic/chat_state";
+import { useLocalStorage, useSyncStorage } from "./logic/chrome_storage";
 import { useReferenceState } from "./logic/reference_state";
-import { useLocalStorage, useSyncStorage } from "./logic/useStorage";
 import {
   Model,
   ModelAndProvider,

@@ -43,7 +43,7 @@ describe("useReferenceState", () => {
       await state.current.addPageRef();
     });
     expect(state.current.references).toEqual(
-      expect.arrayContaining([expect.objectContaining({ url: "url1" })])
+      expect.arrayContaining([expect.objectContaining({ url: "url1" })]),
     );
 
     await act(async () => {

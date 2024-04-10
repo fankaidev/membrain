@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { Reference } from "../utils/message";
 import { getCurrentPageRef, getCurrentSelectionRef } from "../utils/page_content";
-import { getFromStorage, saveToStorage } from "./useStorage";
+import { getFromStorage, saveToStorage } from "./chrome_storage";
 
 export type ChatReferenceState = {
   references: Reference[];

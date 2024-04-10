@@ -44,7 +44,6 @@ export const Assistant = () => {
     [],
   );
   const [customModels, setCustomModels] = useSyncStorage<Model[]>("customModels", []);
-  const [temperature, setTemperature] = useSyncStorage<number>("modelTemperature", 0.3);
   const [customProviders, setCustomProviders] = useSyncStorage<ModelProvider[]>(
     "customProviders",
     [],
@@ -57,8 +56,8 @@ export const Assistant = () => {
   const allModels = [...SYSTEM_MODELS, ...customModels];
   const allProviders = [...SYSTEM_PROVIDERS, ...customProviders];
   const { addPageRef, clearReferences } = useReferenceState();
-  const { setChatTask, setChatStatus } = useChatState();
-  const { UILanguage, loadAppState, displayText } = useAppState();
+  const { setChatTask, setChatStatus, loadChatState } = useChatState();
+  const { loadAppState, displayText } = useAppState();
 
   // handle tasks from menu
   const checkNewTaskFromBackground = async () => {
@@ -87,6 +86,7 @@ export const Assistant = () => {
   useEffect(() => {
     console.debug("init assistant");
     loadAppState();
+    loadChatState();
     chrome.runtime.onMessage.addListener((message: { type: string }) => {
       if (message.type == WA_MESSAGE_TYPE_MENU_TASK) {
         console.log("receive menu task message", message);
@@ -146,8 +146,6 @@ export const Assistant = () => {
             setCustomModels={setCustomModels}
             customProviders={customProviders}
             setCustomProviders={setCustomProviders}
-            temperature={temperature}
-            setTemperature={setTemperature}
           />
         </Drawer>
       </>
@@ -208,7 +206,6 @@ export const Assistant = () => {
           <ChatSession
             currentModel={currentModel}
             providerConfigs={providerConfigs}
-            temperature={temperature}
             history={history}
             setHistory={setHistory}
           />

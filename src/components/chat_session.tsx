@@ -28,13 +28,11 @@ import { BlankDiv } from "./common";
 
 export const ChatSession = ({
   currentModel,
-  temperature,
   providerConfigs,
   history,
   setHistory,
 }: {
   currentModel: ModelAndProvider | null;
-  temperature: number;
   providerConfigs: Record<string, ProviderConfig>;
   history: Message[];
   setHistory: (history: Message[]) => void;
@@ -45,6 +43,7 @@ export const ChatSession = ({
   const chatTaskRef = useRef(chatTask);
   const { references, addPageRef } = useReferenceState();
   const { chatLanguage, displayText } = useAppState();
+  const { temperature } = useChatState();
   const md = markdownit();
 
   useEffect(() => {

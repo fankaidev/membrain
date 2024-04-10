@@ -14,6 +14,7 @@ import {
 } from "antd";
 import React, { useState } from "react";
 import { useAppState } from "../logic/app_state";
+import { useChatState } from "../logic/chat_state";
 import {
   Model,
   ModelProvider,
@@ -32,8 +33,6 @@ export const ModelSettings = ({
   setCustomModels,
   customProviders,
   setCustomProviders,
-  temperature,
-  setTemperature,
 }: {
   providerConfigs: Record<string, ProviderConfig>;
   setProviderConfigs: (values: Record<string, ProviderConfig>) => void;
@@ -41,8 +40,6 @@ export const ModelSettings = ({
   setCustomModels: (models: Model[]) => void;
   customProviders: ModelProvider[];
   setCustomProviders: (providers: ModelProvider[]) => void;
-  temperature: number;
-  setTemperature: (value: number) => void;
 }) => {
   const [openProviderModal, setOpenProviderModal] = useState(false);
   const [editingProvider, setEditingProvider] = useState<ModelProvider | null>(null);
@@ -53,6 +50,7 @@ export const ModelSettings = ({
   const allModels = SYSTEM_MODELS.concat(customModels);
   const allProviders = SYSTEM_PROVIDERS.concat(customProviders);
   const { displayText } = useAppState();
+  const { temperature, setTemperature } = useChatState();
 
   const updateProviderConfig = (config: ProviderConfig) => {
     const values = { ...providerConfigs };

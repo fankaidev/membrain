@@ -39,8 +39,6 @@ describe("ModelSettings Component", () => {
         setCustomModels={setCustomModels}
         customProviders={customProviders}
         setCustomProviders={setCustomProviders}
-        temperature={temperature}
-        setTemperature={setTemperature}
       />,
     );
 

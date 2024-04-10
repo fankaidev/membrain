@@ -1,7 +1,8 @@
 import { InfoCircleOutlined, SyncOutlined } from "@ant-design/icons";
 import { Button, Flex, Tag } from "antd";
-import React, { useContext } from "react";
+import React from "react";
 
+import { useAppState } from "../logic/app_state";
 import { useChatState } from "../logic/chat_state";
 import { TXT } from "../utils/locale";
 import {
@@ -10,10 +11,9 @@ import {
   ChatTask,
   PromptTemplate,
 } from "../utils/message";
-import { LocaleContext } from "./locale_context";
 
 export const ChatActions = ({ promptTemplates }: { promptTemplates: PromptTemplate[] }) => {
-  const { displayText } = useContext(LocaleContext)!;
+  const { displayText } = useAppState();
   const { setChatTask, chatStatus } = useChatState();
 
   const chatTasks: [string, ChatTask][] = [

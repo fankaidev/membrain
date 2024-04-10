@@ -1,19 +1,11 @@
 import { Col, Row, Select, Space, message } from "antd";
-import React, { useContext } from "react";
+import React from "react";
+import { useAppState } from "../logic/app_state";
 import { CHAT_LANGUAGES, TXT, UI_LANGUAGES } from "../utils/locale";
-import { LocaleContext } from "./locale_context";
 
-export const GeneralSettings = ({
-  UILanguage,
-  setUILanguage,
-  chatLanguage,
-  setChatLanguage,
-}: {
-  UILanguage: string;
-  setUILanguage: (value: string) => void;
-  chatLanguage: string;
-  setChatLanguage: (value: string) => void;
-}) => {
+export const GeneralSettings = ({}: {}) => {
+  const { setUILanguage, setChatLanguage, UILanguage, chatLanguage, displayText } = useAppState();
+
   const changeUILanguage = (value: string) => {
     setUILanguage(value);
     message.success(`Language changed to ${value}`, 1);
@@ -23,8 +15,6 @@ export const GeneralSettings = ({
     setChatLanguage(value);
     message.success(`Chat Language changed to ${value}`, 1);
   };
-
-  const { displayText } = useContext(LocaleContext)!;
 
   return (
     <Space direction="vertical" style={{ width: "100%" }}>

@@ -11,11 +11,11 @@ import { ChatActions } from "./components/chat_actions";
 import { ChatInput } from "./components/chat_input";
 import { ChatSession } from "./components/chat_session";
 import { IconButton } from "./components/icon_button";
-import { LocaleContext } from "./components/locale_context";
 import { ModelSettings } from "./components/model_settings";
 import { PromptSettings } from "./components/prompt_settings";
 import { ReferenceBox } from "./components/references";
 import { GeneralSettings } from "./components/settings";
+import { useAppState } from "./logic/app_state";
 import { useChatState } from "./logic/chat_state";
 import { useLocalStorage, useSyncStorage } from "./logic/chrome_storage";
 import { useReferenceState } from "./logic/reference_state";
@@ -30,12 +30,10 @@ import {
   WA_MENU_TASK_SUMMARIZE_PAGE,
   WA_MESSAGE_TYPE_MENU_TASK,
 } from "./utils/config";
-import { TXT, getLocaleMessage } from "./utils/locale";
+import { TXT } from "./utils/locale";
 import { CHAT_STATUS_EMPTY, ChatTask, Message, PromptTemplate } from "./utils/message";
 
 export const Assistant = () => {
-  const [UILanguage, setUILanguage] = useSyncStorage<string>("UILanguage", "en");
-  const [chatLanguage, setChatLanguage] = useSyncStorage<string>("chatLanguage", "English");
   const [currentModel, setCurrentModel] = useState<ModelAndProvider | null>(null);
   const [history, setHistory] = useLocalStorage<Message[]>("chatHistory", []);
   const [openGeneralSettings, setOpenGeneralSettings] = useState(false);
@@ -60,10 +58,7 @@ export const Assistant = () => {
   const allProviders = [...SYSTEM_PROVIDERS, ...customProviders];
   const { addPageRef, clearReferences } = useReferenceState();
   const { setChatTask, setChatStatus } = useChatState();
-
-  const displayText = (text: string) => {
-    return getLocaleMessage(UILanguage, text);
-  };
+  const { UILanguage, loadAppState, displayText } = useAppState();
 
   // handle tasks from menu
   const checkNewTaskFromBackground = async () => {
@@ -91,6 +86,7 @@ export const Assistant = () => {
 
   useEffect(() => {
     console.debug("init assistant");
+    loadAppState();
     chrome.runtime.onMessage.addListener((message: { type: string }) => {
       if (message.type == WA_MESSAGE_TYPE_MENU_TASK) {
         console.log("receive menu task message", message);
@@ -124,12 +120,7 @@ export const Assistant = () => {
           open={openGeneralSettings}
           keyboard={false}
         >
-          <GeneralSettings
-            UILanguage={UILanguage}
-            setUILanguage={setUILanguage}
-            chatLanguage={chatLanguage}
-            setChatLanguage={setChatLanguage}
-          />
+          <GeneralSettings />
         </Drawer>
         <Drawer
           title={displayText(TXT.PAGE_PROMPT_SETTINGS)}
@@ -162,7 +153,8 @@ export const Assistant = () => {
       </>
     );
   };
-  const content = (
+
+  return (
     <>
       {settings()}
       <Flex vertical justify="start" style={{ height: "100%", gap: "8px" }}>
@@ -214,7 +206,6 @@ export const Assistant = () => {
           }}
         >
           <ChatSession
-            chatLanguage={chatLanguage}
             currentModel={currentModel}
             providerConfigs={providerConfigs}
             temperature={temperature}
@@ -236,10 +227,6 @@ export const Assistant = () => {
         </div>
       </Flex>
     </>
-  );
-
-  return (
-    <LocaleContext.Provider value={{ displayText: displayText }}>{content}</LocaleContext.Provider>
   );
 };
 

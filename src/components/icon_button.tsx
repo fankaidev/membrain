@@ -1,7 +1,7 @@
 import { Button, Tooltip } from "antd";
 import { SizeType } from "antd/es/config-provider/SizeContext";
-import React, { useContext } from "react";
-import { LocaleContext } from "./locale_context";
+import React from "react";
+import { useAppState } from "../logic/app_state";
 
 export interface IconButtonProps {
   icon: React.ReactNode;
@@ -18,7 +18,7 @@ export const IconButton = ({
   tooltip = "",
   style,
 }: IconButtonProps) => {
-  const { displayText } = useContext(LocaleContext)!;
+  const { displayText } = useAppState();
 
   return (
     <Tooltip title={displayText(tooltip)}>

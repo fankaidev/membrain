@@ -6,18 +6,19 @@ import {
 } from "@ant-design/icons";
 import { Collapse, Flex, Tag } from "antd";
 import markdownit from "markdown-it";
-import React, { useContext, useEffect } from "react";
+import React, { useEffect } from "react";
+import { useAppState } from "../logic/app_state";
 import { useReferenceState } from "../logic/reference_state";
 import { TXT } from "../utils/locale";
 import { Reference } from "../utils/message";
 import { BlankDiv } from "./common";
 import { IconButton } from "./icon_button";
-import { LocaleContext } from "./locale_context";
 
 export const ReferenceBox = ({}: {}) => {
   const md = markdownit();
   const { references, addPageRef, addSelectionRef, removeRef, loadReferences, clearReferences } =
     useReferenceState();
+  const { displayText } = useAppState();
 
   useEffect(() => {
     loadReferences();
@@ -73,8 +74,6 @@ export const ReferenceBox = ({}: {}) => {
 
     return <Collapse style={{ width: "100%" }} items={items} />;
   };
-
-  const { displayText } = useContext(LocaleContext)!;
 
   return (
     <>

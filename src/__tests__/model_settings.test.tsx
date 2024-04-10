@@ -1,10 +1,8 @@
 import "@testing-library/jest-dom";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import React from "react";
-import { LocaleContext } from "../components/locale_context";
 import { ModelSettings } from "../components/model_settings";
 import { Model, ModelProvider, ProviderConfig } from "../utils/config";
-import { getLocaleMessage } from "../utils/locale";
 
 describe("ModelSettings Component", () => {
   beforeAll(() => {
@@ -34,18 +32,16 @@ describe("ModelSettings Component", () => {
     let temperature = 0.3;
     let setTemperature = jest.fn();
     render(
-      <LocaleContext.Provider value={{ displayText: (txt: string) => getLocaleMessage("en", txt) }}>
-        <ModelSettings
-          providerConfigs={providerConfigs}
-          setProviderConfigs={setProviderConfigs}
-          customModels={customModels}
-          setCustomModels={setCustomModels}
-          customProviders={customProviders}
-          setCustomProviders={setCustomProviders}
-          temperature={temperature}
-          setTemperature={setTemperature}
-        />
-      </LocaleContext.Provider>,
+      <ModelSettings
+        providerConfigs={providerConfigs}
+        setProviderConfigs={setProviderConfigs}
+        customModels={customModels}
+        setCustomModels={setCustomModels}
+        customProviders={customProviders}
+        setCustomProviders={setCustomProviders}
+        temperature={temperature}
+        setTemperature={setTemperature}
+      />,
     );
 
     const openai = screen.getByTestId("provider_OpenAI");

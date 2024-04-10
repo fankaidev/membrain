@@ -1,10 +1,10 @@
 import { MinusCircleOutlined } from "@ant-design/icons";
 import { Button, Col, Flex, Input, Row, Select, Space } from "antd";
 import TextArea from "antd/es/input/TextArea";
-import React, { useContext } from "react";
+import React from "react";
+import { useAppState } from "../logic/app_state";
 import { TXT } from "../utils/locale";
 import { ChatReferenceType, PromptTemplate } from "../utils/message";
-import { LocaleContext } from "./locale_context";
 
 export const PromptSettings = ({
   promptTemplates,
@@ -13,7 +13,7 @@ export const PromptSettings = ({
   promptTemplates: PromptTemplate[];
   setPromptTemplates: (tasks: PromptTemplate[]) => void;
 }) => {
-  const { displayText } = useContext(LocaleContext)!;
+  const { displayText } = useAppState();
 
   const updateTemplatePrompt = (id: string, prompt: string) => {
     const index = promptTemplates.findIndex((tpl) => tpl.id === id);

@@ -7,7 +7,8 @@ import {
 } from "@ant-design/icons";
 import { Button, Col, Row } from "antd";
 import markdownit from "markdown-it";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useAppState } from "../logic/app_state";
 import { useChatState } from "../logic/chat_state";
 import { useReferenceState } from "../logic/reference_state";
 import { callClaude } from "../utils/anthropic_api";
@@ -24,17 +25,14 @@ import {
 import { callOpenAIApi } from "../utils/openai_api";
 import { getCurrentSelection } from "../utils/page_content";
 import { BlankDiv } from "./common";
-import { LocaleContext } from "./locale_context";
 
 export const ChatSession = ({
-  chatLanguage,
   currentModel,
   temperature,
   providerConfigs,
   history,
   setHistory,
 }: {
-  chatLanguage: string;
   currentModel: ModelAndProvider | null;
   temperature: number;
   providerConfigs: Record<string, ProviderConfig>;
@@ -43,10 +41,10 @@ export const ChatSession = ({
 }) => {
   const [currentAnswer, setCurrentAnswer] = useState("");
   const [collpasedIndexes, setCollapsedIndexes] = useState<Set<number>>(new Set());
-  const { displayText } = useContext(LocaleContext)!;
   const { chatTask, setChatTask, chatStatus, setChatStatus } = useChatState();
   const chatTaskRef = useRef(chatTask);
   const { references, addPageRef } = useReferenceState();
+  const { chatLanguage, displayText } = useAppState();
   const md = markdownit();
 
   useEffect(() => {

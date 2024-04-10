@@ -12,7 +12,8 @@ import {
   Slider,
   Switch,
 } from "antd";
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
+import { useAppState } from "../logic/app_state";
 import {
   Model,
   ModelProvider,
@@ -23,7 +24,6 @@ import {
 import { TXT } from "../utils/locale";
 import { BlankDiv } from "./common";
 import { IconButton } from "./icon_button";
-import { LocaleContext } from "./locale_context";
 
 export const ModelSettings = ({
   providerConfigs,
@@ -52,7 +52,7 @@ export const ModelSettings = ({
   const [modelForm] = Form.useForm();
   const allModels = SYSTEM_MODELS.concat(customModels);
   const allProviders = SYSTEM_PROVIDERS.concat(customProviders);
-  const { displayText } = useContext(LocaleContext)!;
+  const { displayText } = useAppState();
 
   const updateProviderConfig = (config: ProviderConfig) => {
     const values = { ...providerConfigs };

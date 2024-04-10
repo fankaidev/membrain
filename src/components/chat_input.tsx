@@ -1,13 +1,13 @@
 import { CloseCircleOutlined, DeploymentUnitOutlined, SendOutlined } from "@ant-design/icons";
 import { Button, Flex, Input, Row, Select } from "antd";
-import React, { ChangeEvent, useContext, useEffect, useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
+import { useAppState } from "../logic/app_state";
 import { useChatState } from "../logic/chat_state";
 import { Model, ModelAndProvider, ModelProvider, ProviderConfig } from "../utils/config";
 import { TXT } from "../utils/locale";
 import { CHAT_STATUS_PROCESSING, ChatTask } from "../utils/message";
 import { BlankDiv } from "./common";
 import { IconButton } from "./icon_button";
-import { LocaleContext } from "./locale_context";
 
 export const ChatInput = ({
   currentModel,
@@ -25,7 +25,7 @@ export const ChatInput = ({
   setOpenModelSettings: (value: boolean) => void;
 }) => {
   const [userInput, setUserInput] = useState("");
-  const { displayText } = useContext(LocaleContext)!;
+  const { displayText } = useAppState();
   const { setChatTask, chatStatus } = useChatState();
 
   const enabledModels: ModelAndProvider[] = allProviders

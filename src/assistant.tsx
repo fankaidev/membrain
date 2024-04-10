@@ -31,7 +31,7 @@ import {
   WA_MESSAGE_TYPE_MENU_TASK,
 } from "./utils/config";
 import { TXT } from "./utils/locale";
-import { CHAT_STATUS_EMPTY, ChatTask, Message, PromptTemplate } from "./utils/message";
+import { CHAT_STATUS_EMPTY, ChatTask, Message } from "./utils/message";
 
 export const Assistant = () => {
   const [currentModel, setCurrentModel] = useState<ModelAndProvider | null>(null);
@@ -39,10 +39,6 @@ export const Assistant = () => {
   const [openGeneralSettings, setOpenGeneralSettings] = useState(false);
   const [openPromptSettings, setOpenPromptSettings] = useState(false);
   const [openModelSettings, setOpenModelSettings] = useState(false);
-  const [promptTemplates, setPromptTemplates] = useSyncStorage<PromptTemplate[]>(
-    "promptTemplates",
-    [],
-  );
   const [customModels, setCustomModels] = useSyncStorage<Model[]>("customModels", []);
   const [customProviders, setCustomProviders] = useSyncStorage<ModelProvider[]>(
     "customProviders",
@@ -128,10 +124,7 @@ export const Assistant = () => {
           open={openPromptSettings}
           keyboard={false}
         >
-          <PromptSettings
-            promptTemplates={promptTemplates}
-            setPromptTemplates={setPromptTemplates}
-          />
+          <PromptSettings />
         </Drawer>
         <Drawer
           title={displayText(TXT.PAGE_MODEL_SETTINGS)}
@@ -209,7 +202,7 @@ export const Assistant = () => {
             history={history}
             setHistory={setHistory}
           />
-          <ChatActions promptTemplates={promptTemplates} />
+          <ChatActions />
         </div>
 
         <div id="chat_input">

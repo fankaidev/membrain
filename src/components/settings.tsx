@@ -3,7 +3,7 @@ import React from "react";
 import { useAppState } from "../logic/app_state";
 import { CHAT_LANGUAGES, TXT, UI_LANGUAGES } from "../utils/locale";
 
-export const GeneralSettings = ({}: {}) => {
+export const GeneralSettings = () => {
   const { setUILanguage, setChatLanguage, UILanguage, chatLanguage, displayText } = useAppState();
 
   const changeUILanguage = (value: string) => {

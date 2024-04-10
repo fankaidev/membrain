@@ -5,16 +5,11 @@ import React from "react";
 import { useAppState } from "../logic/app_state";
 import { useChatState } from "../logic/chat_state";
 import { TXT } from "../utils/locale";
-import {
-  CHAT_STATUS_EMPTY,
-  CHAT_STATUS_PROCESSING,
-  ChatTask,
-  PromptTemplate,
-} from "../utils/message";
+import { CHAT_STATUS_EMPTY, CHAT_STATUS_PROCESSING, ChatTask } from "../utils/message";
 
-export const ChatActions = ({ promptTemplates }: { promptTemplates: PromptTemplate[] }) => {
+export const ChatActions = () => {
   const { displayText } = useAppState();
-  const { setChatTask, chatStatus } = useChatState();
+  const { setChatTask, chatStatus, promptTemplates } = useChatState();
 
   const chatTasks: [string, ChatTask][] = [
     [

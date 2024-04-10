@@ -3,17 +3,13 @@ import { Button, Col, Flex, Input, Row, Select, Space } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import React from "react";
 import { useAppState } from "../logic/app_state";
+import { useChatState } from "../logic/chat_state";
 import { TXT } from "../utils/locale";
 import { ChatReferenceType, PromptTemplate } from "../utils/message";
 
-export const PromptSettings = ({
-  promptTemplates,
-  setPromptTemplates,
-}: {
-  promptTemplates: PromptTemplate[];
-  setPromptTemplates: (tasks: PromptTemplate[]) => void;
-}) => {
+export const PromptSettings = () => {
   const { displayText } = useAppState();
+  const { promptTemplates, setPromptTemplates } = useChatState();
 
   const updateTemplatePrompt = (id: string, prompt: string) => {
     const index = promptTemplates.findIndex((tpl) => tpl.id === id);
@@ -55,62 +51,60 @@ export const PromptSettings = ({
   return (
     <>
       {promptTemplates.map((tpl) => (
-        <>
-          <Row style={{ padding: "16px 0px 16px 0px" }} key={tpl.id}>
-            <Col span={21}>
-              <Space direction="vertical" id={tpl.id} style={{ width: "100%" }}>
-                <Row key="name">
-                  <Col span={8} style={{ lineHeight: "2" }}>
-                    {displayText(TXT.LABEL_NAME)}
-                  </Col>
-                  <Col span={16}>
-                    <Input
-                      value={tpl.name}
-                      onChange={(e) => updateTemplateName(tpl.id, e.target.value)}
-                    />
-                  </Col>
-                </Row>
+        <Row style={{ padding: "16px 0px 16px 0px" }} key={tpl.id}>
+          <Col span={21}>
+            <Space direction="vertical" id={tpl.id} style={{ width: "100%" }}>
+              <Row key="name">
+                <Col span={8} style={{ lineHeight: "2" }}>
+                  {displayText(TXT.LABEL_NAME)}
+                </Col>
+                <Col span={16}>
+                  <Input
+                    value={tpl.name}
+                    onChange={(e) => updateTemplateName(tpl.id, e.target.value)}
+                  />
+                </Col>
+              </Row>
 
-                <Row key="ref_type">
-                  <Col span={8} style={{ lineHeight: "2" }}>
-                    {displayText(TXT.LABEL_REF_TYPE)}
-                  </Col>
-                  <Col span={16}>
-                    <Select
-                      style={{ width: "100%" }}
-                      options={[
-                        { value: "all", label: displayText(TXT.LABEL_REF_TYPE_ALL) },
-                        { value: "page", label: displayText(TXT.LABEL_REF_TYPE_PAGE) },
-                        { value: "selection", label: displayText(TXT.LABEL_REF_TYPE_SELECTION) },
-                      ]}
-                      value={tpl.reference_type}
-                      onChange={(val) => {
-                        updateTemplateRefType(tpl.id, val);
-                      }}
-                    />
-                  </Col>
-                </Row>
-                <TextArea
-                  value={tpl.prompt}
-                  onChange={(e) => updateTemplatePrompt(tpl.id, e.target.value)}
-                  autoSize={{ maxRows: 4 }}
-                  placeholder={displayText(TXT.INPUT_PROMPT_PLACEHOLDER)}
-                />
-              </Space>
-            </Col>
-            <Col span={2} offset={1} style={{ borderLeft: "1px solid lightgray" }}>
-              <Flex dir="row" align="center" justify="end" style={{ height: "100%" }}>
-                <Button
-                  icon={<MinusCircleOutlined />}
-                  type="text"
-                  size="small"
-                  danger
-                  onClick={() => removeTemplate(tpl.id)}
-                />
-              </Flex>
-            </Col>
-          </Row>
-        </>
+              <Row key="ref_type">
+                <Col span={8} style={{ lineHeight: "2" }}>
+                  {displayText(TXT.LABEL_REF_TYPE)}
+                </Col>
+                <Col span={16}>
+                  <Select
+                    style={{ width: "100%" }}
+                    options={[
+                      { value: "all", label: displayText(TXT.LABEL_REF_TYPE_ALL) },
+                      { value: "page", label: displayText(TXT.LABEL_REF_TYPE_PAGE) },
+                      { value: "selection", label: displayText(TXT.LABEL_REF_TYPE_SELECTION) },
+                    ]}
+                    value={tpl.reference_type}
+                    onChange={(val) => {
+                      updateTemplateRefType(tpl.id, val);
+                    }}
+                  />
+                </Col>
+              </Row>
+              <TextArea
+                value={tpl.prompt}
+                onChange={(e) => updateTemplatePrompt(tpl.id, e.target.value)}
+                autoSize={{ maxRows: 4 }}
+                placeholder={displayText(TXT.INPUT_PROMPT_PLACEHOLDER)}
+              />
+            </Space>
+          </Col>
+          <Col span={2} offset={1} style={{ borderLeft: "1px solid lightgray" }}>
+            <Flex dir="row" align="center" justify="end" style={{ height: "100%" }}>
+              <Button
+                icon={<MinusCircleOutlined />}
+                type="text"
+                size="small"
+                danger
+                onClick={() => removeTemplate(tpl.id)}
+              />
+            </Flex>
+          </Col>
+        </Row>
       ))}
 
       <Row justify="center">

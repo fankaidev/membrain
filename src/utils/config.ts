@@ -84,14 +84,14 @@ export const SYSTEM_PROVIDERS: ModelProvider[] = [OpenAI, Anthropic, Google, Moo
 const K = 1024;
 
 export const SYSTEM_MODELS: Model[] = [
-  new Model(OpenAI.id, "gpt-3.5-turbo", 4 * K, 4 * K),
-  new Model(OpenAI.id, "gpt-4", 8 * K, 8 * K),
-  new Model(Anthropic.id, "claude-3-haiku-20240307", 200 * K, 4 * K),
-  new Model(Anthropic.id, "claude-3-sonnet-20240229", 200 * K, 4 * K),
-  new Model(Anthropic.id, "claude-3-opus-20240229", 200 * K, 4 * K),
-  new Model(Google.id, "gemini-pro", 32 * K, 8 * K),
-  new Model(Moonshot.id, "moonshot-v1-8k", 8 * K, 8 * K),
-  new Model(Moonshot.id, "moonshot-v1-32k", 32 * K, 8 * K),
-  new Model(Yi.id, "yi-34b-chat-0205", 4 * K, 4 * K),
-  new Model(Yi.id, "yi-34b-chat-200k", 4 * K, 8 * K),
+  new Model(OpenAI.id, "gpt-3.5-turbo", 4 * K, 4 * K, "gpt-3.5-turbo"),
+  new Model(OpenAI.id, "gpt-4", 8 * K, 8 * K, "gpt-4"),
+  new Model(Anthropic.id, "claude-3-haiku-20240307", 200 * K, 4 * K, "claude-3-haiku-20240307"),
+  new Model(Anthropic.id, "claude-3-sonnet-20240229", 200 * K, 4 * K, "claude-3-sonnet-20240229"),
+  new Model(Anthropic.id, "claude-3-opus-20240229", 200 * K, 4 * K, "claude-3-opus-20240229"),
+  new Model(Google.id, "gemini-pro", 32 * K, 8 * K, "gemini-pro"),
+  new Model(Moonshot.id, "moonshot-v1-8k", 8 * K, 8 * K, "moonshot-v1-8k"),
+  new Model(Moonshot.id, "moonshot-v1-32k", 32 * K, 8 * K, "moonshot-v1-32k"),
+  new Model(Yi.id, "yi-34b-chat-0205", 4 * K, 4 * K, "yi-34b-chat-0205"),
+  new Model(Yi.id, "yi-34b-chat-200k", 4 * K, 8 * K, "yi-34b-chat-200k"),
 ];

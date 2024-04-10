@@ -12,7 +12,6 @@ import { useAppState } from "../logic/app_state";
 import { useChatState } from "../logic/chat_state";
 import { useReferenceState } from "../logic/reference_state";
 import { callClaude } from "../utils/anthropic_api";
-import { ModelAndProvider, ProviderConfig } from "../utils/config";
 import { callGemini } from "../utils/google_api";
 import { TXT } from "../utils/locale";
 import {
@@ -26,25 +25,16 @@ import { callOpenAIApi } from "../utils/openai_api";
 import { getCurrentSelection } from "../utils/page_content";
 import { BlankDiv } from "./common";
 
-export const ChatSession = ({
-  currentModel,
-  providerConfigs,
-  history,
-  setHistory,
-}: {
-  currentModel: ModelAndProvider | null;
-  providerConfigs: Record<string, ProviderConfig>;
-  history: Message[];
-  setHistory: (history: Message[]) => void;
-}) => {
+export const ChatSession = () => {
   const [currentAnswer, setCurrentAnswer] = useState("");
   const [collpasedIndexes, setCollapsedIndexes] = useState<Set<number>>(new Set());
-  const { chatTask, setChatTask, chatStatus, setChatStatus } = useChatState();
+  const { chatTask, setChatTask, chatStatus, setChatStatus, providerConfigs } = useChatState();
   const chatTaskRef = useRef(chatTask);
   const { references, addPageRef } = useReferenceState();
   const { chatLanguage, displayText } = useAppState();
-  const { temperature } = useChatState();
+  const { temperature, getCurrentModel, history, setHistory } = useChatState();
   const md = markdownit();
+  const currentModel = getCurrentModel();
 
   useEffect(() => {
     if (!currentAnswer) {
@@ -60,7 +50,7 @@ export const ChatSession = ({
         ]);
       }
     }
-  }, [currentAnswer, chatTask]);
+  }, [currentAnswer]);
 
   useEffect(() => {
     if (history.length === 0) {

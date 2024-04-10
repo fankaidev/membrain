@@ -1,7 +1,20 @@
+import { createMockStorage } from "../utils/storage_mock";
+
+const storageMock = createMockStorage();
+globalThis.chrome = {
+  storage: {
+    // @ts-ignore
+    local: storageMock,
+    // @ts-ignore
+    sync: storageMock,
+  },
+};
+
 import "@testing-library/jest-dom";
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, renderHook, screen, within } from "@testing-library/react";
 import React from "react";
 import { ModelSettings } from "../components/model_settings";
+import { useChatState } from "../logic/chat_state";
 import { Model, ModelProvider, ProviderConfig } from "../utils/config";
 
 describe("ModelSettings Component", () => {
@@ -22,25 +35,18 @@ describe("ModelSettings Component", () => {
     const providerConfigs: Record<string, ProviderConfig> = {
       tesla: new ProviderConfig("tesla", true, "key1", ["model_3"]),
     };
-    const setProviderConfigs = jest.fn();
     let customModels: Model[] = [new Model("tesla", "model_3", 4096, 4096)];
-    let setCustomModels = jest.fn();
     let customProviders: ModelProvider[] = [
       new ModelProvider("Tesla", "OpenAI", "https://api.tesla.com", "tesla"),
     ];
-    let setCustomProviders = jest.fn();
-    let temperature = 0.3;
-    let setTemperature = jest.fn();
-    render(
-      <ModelSettings
-        providerConfigs={providerConfigs}
-        setProviderConfigs={setProviderConfigs}
-        customModels={customModels}
-        setCustomModels={setCustomModels}
-        customProviders={customProviders}
-        setCustomProviders={setCustomProviders}
-      />,
-    );
+
+    const { result: chatState } = renderHook(() => useChatState());
+    act(() => {
+      chatState.current.setProviderConfigs(providerConfigs);
+      chatState.current.setCustomModels(customModels);
+      chatState.current.setCustomProviders(customProviders);
+    });
+    render(<ModelSettings />);
 
     const openai = screen.getByTestId("provider_OpenAI");
     expect(within(openai).queryByText("OpenAI")).toBeInTheDocument();

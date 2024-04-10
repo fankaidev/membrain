@@ -15,42 +15,31 @@ import {
 import React, { useState } from "react";
 import { useAppState } from "../logic/app_state";
 import { useChatState } from "../logic/chat_state";
-import {
-  Model,
-  ModelProvider,
-  ProviderConfig,
-  SYSTEM_MODELS,
-  SYSTEM_PROVIDERS,
-} from "../utils/config";
+import { Model, ModelProvider, ProviderConfig } from "../utils/config";
 import { TXT } from "../utils/locale";
 import { BlankDiv } from "./common";
 import { IconButton } from "./icon_button";
 
-export const ModelSettings = ({
-  providerConfigs,
-  setProviderConfigs,
-  customModels,
-  setCustomModels,
-  customProviders,
-  setCustomProviders,
-}: {
-  providerConfigs: Record<string, ProviderConfig>;
-  setProviderConfigs: (values: Record<string, ProviderConfig>) => void;
-  customModels: Model[];
-  setCustomModels: (models: Model[]) => void;
-  customProviders: ModelProvider[];
-  setCustomProviders: (providers: ModelProvider[]) => void;
-}) => {
+export const ModelSettings = ({}: {}) => {
   const [openProviderModal, setOpenProviderModal] = useState(false);
   const [editingProvider, setEditingProvider] = useState<ModelProvider | null>(null);
   const [providerForm] = Form.useForm();
   const [openModelModal, setOpenModelModal] = useState(false);
   const [editingModel, setEditingModel] = useState<Model | null>(null);
   const [modelForm] = Form.useForm();
-  const allModels = SYSTEM_MODELS.concat(customModels);
-  const allProviders = SYSTEM_PROVIDERS.concat(customProviders);
   const { displayText } = useAppState();
-  const { temperature, setTemperature } = useChatState();
+  const {
+    temperature,
+    setTemperature,
+    customModels,
+    customProviders,
+    setCustomModels,
+    setCustomProviders,
+    providerConfigs,
+    setProviderConfigs,
+    getAllModels,
+    getAllProviders,
+  } = useChatState();
 
   const updateProviderConfig = (config: ProviderConfig) => {
     const values = { ...providerConfigs };
@@ -156,7 +145,7 @@ export const ModelSettings = ({
   const displayProviderRow = (provider: ModelProvider, config: ProviderConfig) => {
     const toggleProvider = (checked: boolean) => {
       if (checked) {
-        const providerModels = allModels.filter((model) => model.providerId === provider.id);
+        const providerModels = getAllModels().filter((model) => model.providerId === provider.id);
         config.enabledModels = providerModels.map((model) => model.name);
       } else {
         config.enabledModels = [];
@@ -320,7 +309,7 @@ export const ModelSettings = ({
 
   const displayProviderSettings = (provider: ModelProvider) => {
     const config = providerConfigs[provider.id] || new ProviderConfig(provider.id, false, "", []);
-    const providerModels = allModels.filter((model) => model.providerId === provider.id);
+    const providerModels = getAllModels().filter((model) => model.providerId === provider.id);
     return (
       <div key={provider.id} data-testid={`provider_${provider.name}`}>
         {displayProviderRow(provider, config)}
@@ -352,7 +341,7 @@ export const ModelSettings = ({
       {displayProviderModal()}
       <h2>{displayText(TXT.LABEL_MODELS)}</h2>
       <BlankDiv />
-      {allProviders.map((provider) => displayProviderSettings(provider))}
+      {getAllProviders().map((provider) => displayProviderSettings(provider))}
       <Row justify="center">
         <Button onClick={startAddingProvider}>{displayText(TXT.ACTION_CONF_ADD_PROVIDER)}</Button>
       </Row>

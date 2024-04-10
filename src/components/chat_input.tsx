@@ -1,60 +1,29 @@
 import { CloseCircleOutlined, DeploymentUnitOutlined, SendOutlined } from "@ant-design/icons";
 import { Button, Flex, Input, Row, Select } from "antd";
-import React, { ChangeEvent, useEffect, useState } from "react";
+import React, { ChangeEvent, useState } from "react";
 import { useAppState } from "../logic/app_state";
 import { useChatState } from "../logic/chat_state";
-import { Model, ModelAndProvider, ModelProvider, ProviderConfig } from "../utils/config";
 import { TXT } from "../utils/locale";
 import { CHAT_STATUS_PROCESSING, ChatTask } from "../utils/message";
 import { BlankDiv } from "./common";
 import { IconButton } from "./icon_button";
 
 export const ChatInput = ({
-  currentModel,
-  allModels,
-  allProviders,
-  providerConfigs,
-  setCurrentModel,
   setOpenModelSettings,
 }: {
-  currentModel: ModelAndProvider | null;
-  allModels: Model[];
-  allProviders: ModelProvider[];
-  providerConfigs: Record<string, ProviderConfig>;
-  setCurrentModel: (value: ModelAndProvider | null) => void;
   setOpenModelSettings: (value: boolean) => void;
 }) => {
   const [userInput, setUserInput] = useState("");
   const { displayText } = useAppState();
-  const { setChatTask, chatStatus } = useChatState();
-
-  const enabledModels: ModelAndProvider[] = allProviders
-    .map((p) => [p, providerConfigs[p.id]] as [ModelProvider, ProviderConfig])
-    .filter(([p, c]) => c && c.enabled)
-    .flatMap(([p, c]) =>
-      allModels
-        .filter((m) => m.providerId === p.id && c.enabledModels.includes(m.name))
-        .map((m) => new ModelAndProvider(m, p)),
-    );
-
-  const isCurrentModelValid = (): boolean => {
-    if (currentModel === null) {
-      return false;
-    }
-    const { model, provider } = currentModel;
-    return !!enabledModels.find((mp) => mp.model.id == model.id && mp.provider.id == provider.id);
-  };
-
-  useEffect(() => {
-    if (enabledModels.length === 0 && currentModel !== null) {
-      setCurrentModel(null);
-    }
-    if (enabledModels.length > 0 && !isCurrentModelValid()) {
-      setCurrentModel(enabledModels[0]);
-    }
-    console.debug("enabled models=", enabledModels);
-  }, [providerConfigs, enabledModels]);
-
+  const {
+    setChatTask,
+    getCurrentModel,
+    getEnabledModels,
+    setSelectedModel,
+    chatStatus,
+    loaded: loadedChatState,
+  } = useChatState();
+  const enabledModels = getEnabledModels();
   const handleUserInputChange = (e: ChangeEvent<any>) => {
     setUserInput(e.target.value);
   };
@@ -63,7 +32,7 @@ export const ChatInput = ({
     if (!userInput.trim()) {
       return;
     }
-    if (!isCurrentModelValid() || chatStatus === CHAT_STATUS_PROCESSING) {
+    if (!getCurrentModel() || chatStatus === CHAT_STATUS_PROCESSING) {
       return;
     }
     setChatTask(new ChatTask(userInput.trim(), "all"));
@@ -85,15 +54,15 @@ export const ChatInput = ({
     <div style={{ paddingLeft: "4px", paddingRight: "4px" }}>
       {enabledModels.length > 0 && (
         <Select
-          onChange={(val) => setCurrentModel(val ? JSON.parse(val) : null)}
-          value={currentModel ? JSON.stringify(currentModel) : ""}
+          onChange={(val) => setSelectedModel(val ? JSON.parse(val) : null)}
+          value={getCurrentModel() ? JSON.stringify(getCurrentModel()) : ""}
           style={{ width: "100%" }}
           placeholder="Select Model"
           options={enabledModels.map((m) => ({ value: JSON.stringify(m), label: m.model.name }))}
           showSearch
         />
       )}
-      {enabledModels.length === 0 && (
+      {loadedChatState && enabledModels.length === 0 && (
         <Row>
           <Button
             icon={<DeploymentUnitOutlined />}

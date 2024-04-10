@@ -1,15 +1,58 @@
 import { InfoCircleOutlined, SyncOutlined } from "@ant-design/icons";
 import { Button, Flex, Tag } from "antd";
-import React from "react";
+import React, { useEffect } from "react";
 
 import { useAppState } from "../logic/app_state";
 import { useChatState } from "../logic/chat_state";
+import { useReferenceState } from "../logic/reference_state";
+import {
+  WA_MENU_TASK_EXPLAIN_SELECTION,
+  WA_MENU_TASK_SUMMARIZE_PAGE,
+  WA_MESSAGE_TYPE_MENU_TASK,
+} from "../utils/config";
 import { TXT } from "../utils/locale";
 import { CHAT_STATUS_EMPTY, CHAT_STATUS_PROCESSING, ChatTask } from "../utils/message";
 
 export const ChatActions = () => {
   const { displayText } = useAppState();
   const { setChatTask, chatStatus, promptTemplates } = useChatState();
+  const { addPageRef } = useReferenceState();
+
+  // handle tasks from menu
+  const checkNewTaskFromBackground = async () => {
+    const { menuTask } = await chrome.storage.local.get("menuTask");
+    if (!menuTask) {
+      return;
+    }
+    const currentWindow = await chrome.windows.getCurrent();
+    console.debug("get menu task=", menuTask, "current window=", currentWindow.id);
+    if (menuTask.windowId !== currentWindow.id) {
+      return;
+    }
+    chrome.storage.local.set({ menuTask: null });
+    const pageRef = await addPageRef();
+    if (!pageRef) {
+      console.error("fail to get current page");
+    } else if (menuTask.name === WA_MENU_TASK_SUMMARIZE_PAGE) {
+      setChatTask(new ChatTask(displayText(TXT.PROMPT_SUMMARIZE_PAGE), "page"));
+    } else if (menuTask.name === WA_MENU_TASK_EXPLAIN_SELECTION) {
+      setChatTask(new ChatTask(displayText(TXT.PROMPT_SUMMARIZE_SELECTION), "selection"));
+    } else {
+      console.error("unknown menu task:", menuTask);
+    }
+  };
+
+  useEffect(() => {
+    console.debug("init message listener");
+    chrome.runtime.onMessage.addListener((message: { type: string }) => {
+      if (message.type == WA_MESSAGE_TYPE_MENU_TASK) {
+        console.log("receive menu task message", message);
+        checkNewTaskFromBackground();
+      }
+    });
+    // invoke explicitly, as newly opened panels may miss above message
+    checkNewTaskFromBackground();
+  }, []);
 
   const chatTasks: [string, ChatTask][] = [
     [

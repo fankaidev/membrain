@@ -145,10 +145,9 @@ export const useChatState = create<ChatState>((set, get) => ({
     set({ loaded: true });
   },
   clearChatSession: () => {
-    set({
-      chatStatus: CHAT_STATUS_EMPTY,
-      chatTask: null,
-      history: [],
-    });
+    const { setChatTask, setChatStatus, setHistory } = get();
+    setChatStatus(CHAT_STATUS_EMPTY);
+    setChatTask(null);
+    setHistory([]);
   },
 }));

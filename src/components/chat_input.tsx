@@ -16,12 +16,12 @@ export const ChatInput = ({
   const [userInput, setUserInput] = useState("");
   const { displayText } = useAppState();
   const {
-    setChatTask,
-    getCurrentModel,
-    getEnabledModels,
-    setSelectedModel,
+    currentModel,
     chatStatus,
     loaded: loadedChatState,
+    setChatTask,
+    setCurrentModel,
+    getEnabledModels,
   } = useChatState();
   const enabledModels = getEnabledModels();
   const handleUserInputChange = (e: ChangeEvent<any>) => {
@@ -32,7 +32,7 @@ export const ChatInput = ({
     if (!userInput.trim()) {
       return;
     }
-    if (!getCurrentModel() || chatStatus === CHAT_STATUS_PROCESSING) {
+    if (!currentModel || chatStatus === CHAT_STATUS_PROCESSING) {
       return;
     }
     setChatTask(new ChatTask(userInput.trim(), "all"));
@@ -54,8 +54,8 @@ export const ChatInput = ({
     <div style={{ paddingLeft: "4px", paddingRight: "4px" }}>
       {enabledModels.length > 0 && (
         <Select
-          onChange={(val) => setSelectedModel(val ? JSON.parse(val) : null)}
-          value={getCurrentModel() ? JSON.stringify(getCurrentModel()) : ""}
+          onChange={(val) => setCurrentModel(val ? JSON.parse(val) : null)}
+          value={currentModel ? JSON.stringify(currentModel) : ""}
           style={{ width: "100%" }}
           placeholder="Select Model"
           options={enabledModels.map((m) => ({ value: JSON.stringify(m), label: m.model.name }))}

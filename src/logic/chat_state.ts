@@ -18,7 +18,7 @@ export type ChatState = {
   customModels: Model[];
   customProviders: ModelProvider[];
   providerConfigs: Record<string, ProviderConfig>;
-  selectedModel: ModelAndProvider | null;
+  currentModel: ModelAndProvider | null;
   history: Message[];
   loaded: boolean;
   setChatStatus: (val: string) => void;
@@ -28,14 +28,14 @@ export type ChatState = {
   setCustomModels: (val: Model[]) => void;
   setCustomProviders: (val: ModelProvider[]) => void;
   setProviderConfigs: (val: Record<string, ProviderConfig>) => void;
-  setSelectedModel: (val: ModelAndProvider | null) => void;
+  setCurrentModel: (val: ModelAndProvider | null) => void;
   setHistory: (val: Message[]) => void;
   getAllModels: () => Model[];
   getAllProviders: () => ModelProvider[];
   getEnabledModels(): ModelAndProvider[];
-  getCurrentModel: () => ModelAndProvider | null;
   loadChatState: () => Promise<void>;
   clearChatSession: () => void;
+  refreshCurrentModel: () => void;
 };
 
 export const useChatState = create<ChatState>((set, get) => ({
@@ -46,7 +46,7 @@ export const useChatState = create<ChatState>((set, get) => ({
   customModels: [],
   customProviders: [],
   providerConfigs: {},
-  selectedModel: null,
+  currentModel: null,
   history: [],
   loaded: false,
   setChatStatus: (val: string) => {
@@ -67,19 +67,22 @@ export const useChatState = create<ChatState>((set, get) => ({
   setCustomModels: (val: Model[]) => {
     set({ customModels: val });
     saveToStorage("sync", "customModels", val);
+    get().refreshCurrentModel();
   },
   setCustomProviders: (val: ModelProvider[]) => {
     set({ customProviders: val });
     saveToStorage("sync", "customProviders", val);
+    get().refreshCurrentModel();
   },
   setProviderConfigs: (val: Record<string, ProviderConfig>) => {
     set({ providerConfigs: val });
     saveToStorage("sync", "providerConfigs", val);
+    get().refreshCurrentModel();
   },
-  setSelectedModel: (val: ModelAndProvider | null) => {
-    set({ selectedModel: val });
-    console.debug("setSelectedModel", val?.model.id);
-    saveToStorage("sync", "selectedModelId", val?.model.id);
+  setCurrentModel: (val: ModelAndProvider | null) => {
+    set({ currentModel: val });
+    saveToStorage("sync", "currentModelId", val?.model.id);
+    get().refreshCurrentModel();
   },
   setHistory: (val: Message[]) => {
     set({ history: val });
@@ -102,27 +105,6 @@ export const useChatState = create<ChatState>((set, get) => ({
           .map((m) => new ModelAndProvider(m, p)),
       );
   },
-  getCurrentModel: () => {
-    const { getEnabledModels, selectedModel } = get();
-    const enabledModels = getEnabledModels();
-
-    const isSelectedModelValid = (): boolean => {
-      if (selectedModel === null) {
-        return false;
-      }
-      const { model, provider } = selectedModel;
-      return !!enabledModels.find((mp) => mp.model.id == model.id && mp.provider.id == provider.id);
-    };
-
-    if (enabledModels.length === 0) {
-      return null;
-    }
-    if (enabledModels.length > 0 && !isSelectedModelValid()) {
-      set({ selectedModel: enabledModels[0] });
-      return enabledModels[0];
-    }
-    return selectedModel;
-  },
   loadChatState: async () => {
     const temperature = await getFromStorage("sync", "temperature", 0.3);
     const promptTemplates = await getFromStorage("sync", "promptTemplates", []);
@@ -132,16 +114,16 @@ export const useChatState = create<ChatState>((set, get) => ({
     const history = await getFromStorage("local", "history", []);
     set({ temperature, promptTemplates, customModels, customProviders, providerConfigs, history });
 
-    const selectedModelId = await getFromStorage("sync", "selectedModelId", null);
-    const selectedModel = get()
+    const currentModelId = await getFromStorage("sync", "currentModelId", null);
+    const currentModel = get()
       .getEnabledModels()
-      .find((m) => m.model.id === selectedModelId);
-    if (selectedModel) {
-      set({ selectedModel });
+      .find((m) => m.model.id === currentModelId);
+    if (currentModel) {
+      get().setCurrentModel(currentModel);
     }
 
     console.debug("loaded enabled models:", get().getEnabledModels());
-    console.debug("loaded selectedModel", selectedModelId, selectedModel);
+    console.debug("loaded selectedModel", currentModelId, currentModel);
     set({ loaded: true });
   },
   clearChatSession: () => {
@@ -149,5 +131,33 @@ export const useChatState = create<ChatState>((set, get) => ({
     setChatStatus(CHAT_STATUS_EMPTY);
     setChatTask(null);
     setHistory([]);
+  },
+  refreshCurrentModel: () => {
+    const { getEnabledModels, setCurrentModel, currentModel } = get();
+    const enabledModels = getEnabledModels();
+
+    const isCurrentModelValid = (): boolean => {
+      if (currentModel === null) {
+        return false;
+      }
+      const { model, provider } = currentModel;
+      return !!enabledModels.find((mp) => mp.model.id == model.id && mp.provider.id == provider.id);
+    };
+
+    const getValidModel = () => {
+      if (enabledModels.length === 0) {
+        return null;
+      }
+      if (enabledModels.length > 0 && !isCurrentModelValid()) {
+        return enabledModels[0];
+      }
+      return currentModel;
+    };
+
+    const model = getValidModel();
+    if (model !== currentModel) {
+      console.debug("set current model", model);
+      setCurrentModel(model);
+    }
   },
 }));

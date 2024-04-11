@@ -32,9 +32,8 @@ export const ChatSession = () => {
   const chatTaskRef = useRef(chatTask);
   const { references, addPageRef } = useReferenceState();
   const { chatLanguage, displayText } = useAppState();
-  const { temperature, getCurrentModel, history, setHistory } = useChatState();
+  const { temperature, currentModel, history, setHistory } = useChatState();
   const md = markdownit();
-  const currentModel = getCurrentModel();
 
   useEffect(() => {
     if (!currentAnswer) {

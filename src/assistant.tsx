@@ -47,37 +47,6 @@ export const Assistant = () => {
     clearReferences();
   };
 
-  const Drawers = () => {
-    return (
-      <>
-        <Drawer
-          title={displayText(TXT.PAGE_GENERAL_SETTINGS)}
-          onClose={() => setOpenGeneralSettings(false)}
-          open={openGeneralSettings}
-          keyboard={false}
-        >
-          <GeneralSettings />
-        </Drawer>
-        <Drawer
-          title={displayText(TXT.PAGE_PROMPT_SETTINGS)}
-          onClose={() => setOpenPromptSettings(false)}
-          open={openPromptSettings}
-          keyboard={false}
-        >
-          <PromptSettings />
-        </Drawer>
-        <Drawer
-          title={displayText(TXT.PAGE_MODEL_SETTINGS)}
-          onClose={() => setOpenModelSettings(false)}
-          open={openModelSettings}
-          keyboard={false}
-        >
-          <ModelSettings />
-        </Drawer>
-      </>
-    );
-  };
-
   const Actions = () => {
     return (
       <Row id="settings">
@@ -116,7 +85,30 @@ export const Assistant = () => {
 
   return (
     <>
-      <Drawers />
+      <Drawer
+        title={displayText(TXT.PAGE_GENERAL_SETTINGS)}
+        onClose={() => setOpenGeneralSettings(false)}
+        open={openGeneralSettings}
+        keyboard={false}
+      >
+        <GeneralSettings />
+      </Drawer>
+      <Drawer
+        title={displayText(TXT.PAGE_PROMPT_SETTINGS)}
+        onClose={() => setOpenPromptSettings(false)}
+        open={openPromptSettings}
+        keyboard={false}
+      >
+        <PromptSettings />
+      </Drawer>
+      <Drawer
+        title={displayText(TXT.PAGE_MODEL_SETTINGS)}
+        onClose={() => setOpenModelSettings(false)}
+        open={openModelSettings}
+        keyboard={false}
+      >
+        <ModelSettings />
+      </Drawer>
       <Flex vertical justify="start" style={{ height: "100%", gap: "8px" }}>
         <Actions />
         <ReferenceBox />
